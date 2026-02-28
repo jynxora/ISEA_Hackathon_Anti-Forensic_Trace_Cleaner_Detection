@@ -1717,16 +1717,23 @@
       function startAnalysis() {
         if (!currentSessionId) return;
         const btn = document.getElementById("analyzeBtn");
-        btn.classList.add("loading"); // show CSS spinner
+        btn.classList.add("loading");
         btn.disabled = true;
-        // Navigate to analysis page with session ID
-        // window.location.href = `/analysis?session=${currentSessionId}`;
-        setTimeout(() => {
-          btn.classList.remove("loading");
-          btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><polygon points="5 3 19 12 5 21 5 3"/></svg> Begin Analysis`;
-          btn.disabled = false;
-          alert(`Navigating to /analysis?session=${currentSessionId}`);
-        }, 1200);
+
+        // Build URL params to pass session context to the dashboard
+        const filename = document.getElementById("fileName").textContent || "";
+        const size = document.getElementById("fileSize").textContent || "";
+        const sha256 = document.getElementById("fileHash").textContent || "";
+
+        const params = new URLSearchParams({
+          session: currentSessionId,
+          file: filename,
+          size: size,
+          sha256: sha256,
+        });
+
+        // Navigate to analysis dashboard — passes all context in URL
+        window.location.href = `analysis_dashboard.html?${params.toString()}`;
       }
 
       function showError(msg) {
