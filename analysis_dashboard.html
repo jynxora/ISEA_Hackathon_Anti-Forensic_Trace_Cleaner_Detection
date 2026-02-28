@@ -1,5 +1,2707 @@
 <!DOCTYPE html>
+<html lang=<!doctype html>
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WipeTrace — Analysis Dashboard</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Syne:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+    <style>
+      :root {
+        --bg: #0a0b0d;
+        --surface: #101214;
+        --panel: #14171a;
+        --panel2: #181c1f;
+        --border: #1e2227;
+        --border-hi: #2a2f36;
+        --accent: #e8ff47;
+        --accent-lo: rgba(232, 255, 71, 0.07);
+        --accent-md: rgba(232, 255, 71, 0.15);
+        --red: #ff4d4d;
+        --red-lo: rgba(255, 77, 77, 0.08);
+        --red-md: rgba(255, 77, 77, 0.18);
+        --teal: #00c8a0;
+        --teal-lo: rgba(0, 200, 160, 0.08);
+        --blue: #4d9fff;
+        --blue-lo: rgba(77, 159, 255, 0.08);
+        --yellow: #ffcc00;
+        --yellow-lo: rgba(255, 204, 0, 0.08);
+        --purple: #c084fc;
+        --purple-lo: rgba(192, 132, 252, 0.08);
+        --muted: #3a4048;
+        --dim: #5c636e;
+        --text: #c8cdd4;
+        --text-hi: #e8ecf0;
+        --text-lo: #4a5260;
+        --mono: "JetBrains Mono", monospace;
+        --sans: "Syne", sans-serif;
+      }
+
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      html,
+      body {
+        height: 100%;
+        background: var(--bg);
+        color: var(--text);
+        font-family: var(--mono);
+        font-size: 13px;
+        line-height: 1.6;
+        overflow: hidden;
+      }
+
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background: repeating-linear-gradient(
+          0deg,
+          transparent,
+          transparent 3px,
+          rgba(0, 0, 0, 0.04) 3px,
+          rgba(0, 0, 0, 0.04) 4px
+        );
+        pointer-events: none;
+        z-index: 9999;
+      }
+
+      .shell {
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+
+      /* ── Nav ── */
+      nav {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 32px;
+        height: 52px;
+        border-bottom: 1px solid var(--border);
+        background: var(--surface);
+        flex-shrink: 0;
+        z-index: 100;
+      }
+
+      .nav-left {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+      }
+
+      .nav-logo {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-family: var(--sans);
+        font-weight: 800;
+        font-size: 15px;
+        letter-spacing: -0.02em;
+        color: var(--text-hi);
+      }
+
+      .nav-logo-mark {
+        width: 26px;
+        height: 26px;
+        background: var(--accent);
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .nav-logo-mark svg {
+        width: 14px;
+        height: 14px;
+      }
+
+      .nav-divider {
+        width: 1px;
+        height: 20px;
+        background: var(--border-hi);
+      }
+
+      .nav-session {
+        font-size: 10px;
+        color: var(--dim);
+        letter-spacing: 0.06em;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .nav-session strong {
+        color: var(--text);
+      }
+
+      .nav-right {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+      }
+
+      .nav-file-info {
+        text-align: right;
+      }
+      .nav-file-info .fname {
+        font-size: 11px;
+        color: var(--text);
+        display: block;
+        font-weight: 600;
+      }
+      .nav-file-info .fmeta {
+        font-size: 10px;
+        color: var(--dim);
+      }
+
+      /* ── Step Bar ── */
+      .step-bar {
+        display: flex;
+        align-items: center;
+        padding: 0 32px;
+        height: 40px;
+        background: var(--panel);
+        border-bottom: 1px solid var(--border);
+        flex-shrink: 0;
+        gap: 0;
+      }
+      .step-item {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        font-size: 10px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--text-lo);
+        padding-right: 14px;
+      }
+      .step-item.done {
+        color: var(--teal);
+      }
+      .step-item.active {
+        color: var(--accent);
+      }
+      .step-num {
+        width: 17px;
+        height: 17px;
+        border-radius: 3px;
+        border: 1px solid currentColor;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 9px;
+        font-weight: 600;
+      }
+      .step-item.active .step-num {
+        background: var(--accent);
+        color: #000;
+        border-color: var(--accent);
+      }
+      .step-item.done .step-num {
+        background: var(--teal);
+        color: #000;
+        border-color: var(--teal);
+      }
+      .step-arrow {
+        color: var(--border-hi);
+        margin: 0 6px;
+        font-size: 11px;
+      }
+
+      /* ── Toolbar ── */
+      .toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 32px;
+        height: 52px;
+        border-bottom: 1px solid var(--border);
+        background: var(--panel2);
+        flex-shrink: 0;
+      }
+
+      .toolbar-left {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .toolbar-right {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      /* Tabs */
+      .tab-group {
+        display: flex;
+        gap: 2px;
+      }
+
+      .tab-btn {
+        padding: 6px 16px;
+        border-radius: 4px;
+        border: 1px solid transparent;
+        background: none;
+        color: var(--dim);
+        font-family: var(--mono);
+        font-size: 11px;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        cursor: pointer;
+        transition: all 0.15s;
+      }
+      .tab-btn:hover {
+        color: var(--text);
+        background: var(--surface);
+      }
+      .tab-btn.active {
+        background: var(--accent-lo);
+        border-color: rgba(232, 255, 71, 0.25);
+        color: var(--accent);
+      }
+
+      .toolbar-divider {
+        width: 1px;
+        height: 24px;
+        background: var(--border-hi);
+        margin: 0 4px;
+      }
+
+      /* Scan button */
+      .btn-scan {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        padding: 8px 20px;
+        background: var(--accent);
+        color: #000;
+        border: none;
+        border-radius: 4px;
+        font-family: var(--mono);
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.07em;
+        text-transform: uppercase;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+      .btn-scan:hover {
+        background: #f5ff6e;
+        box-shadow: 0 0 16px rgba(232, 255, 71, 0.3);
+      }
+      .btn-scan:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+        box-shadow: none;
+      }
+      .btn-scan.scanning {
+        background: var(--panel);
+        color: var(--accent);
+        border: 1px solid var(--accent);
+      }
+
+      .btn-export {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 7px 14px;
+        background: none;
+        border: 1px solid var(--border-hi);
+        border-radius: 4px;
+        color: var(--dim);
+        font-family: var(--mono);
+        font-size: 11px;
+        letter-spacing: 0.04em;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+      .btn-export:hover {
+        border-color: var(--text-lo);
+        color: var(--text);
+      }
+      .btn-export:disabled {
+        opacity: 0.35;
+        cursor: not-allowed;
+      }
+
+      /* Scan status badge */
+      .scan-status {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 10px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+      }
+      .scan-status .dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--muted);
+      }
+      .scan-status.idle .dot {
+        background: var(--muted);
+      }
+      .scan-status.running .dot {
+        background: var(--accent);
+        box-shadow: 0 0 6px var(--accent);
+        animation: pulse 1s ease-in-out infinite;
+      }
+      .scan-status.done .dot {
+        background: var(--teal);
+        box-shadow: 0 0 6px var(--teal);
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.3;
+        }
+      }
+
+      /* ── Body ── */
+      .body {
+        flex: 1;
+        min-height: 0;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+      }
+
+      /* ── Tab Panels ── */
+      .tab-panels {
+        flex: 1;
+        min-height: 0;
+        overflow: hidden;
+      }
+
+      .tab-panel {
+        display: none;
+        height: 100%;
+      }
+      .tab-panel.active {
+        display: flex;
+        flex-direction: column;
+      }
+
+      /* ────────────────────────────────────────
+       TAB 1 — OVERVIEW
+    ──────────────────────────────────────── */
+      .overview-layout {
+        flex: 1;
+        min-height: 0;
+        overflow: hidden;
+        display: grid;
+        grid-template-rows: auto 1fr;
+      }
+
+      /* Stat cards row */
+      .stat-row {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        border-bottom: 1px solid var(--border);
+        flex-shrink: 0;
+      }
+
+      .stat-card {
+        padding: 16px 20px;
+        border-right: 1px solid var(--border);
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        position: relative;
+        overflow: hidden;
+        transition: background 0.2s;
+      }
+      .stat-card:last-child {
+        border-right: none;
+      }
+      .stat-card:hover {
+        background: var(--panel);
+      }
+
+      .stat-label {
+        font-size: 9px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--dim);
+      }
+      .stat-value {
+        font-family: var(--sans);
+        font-size: 26px;
+        font-weight: 800;
+        color: var(--text-hi);
+        letter-spacing: -0.02em;
+        line-height: 1;
+      }
+      .stat-sub {
+        font-size: 10px;
+        color: var(--text-lo);
+      }
+
+      .stat-card.highlight-red .stat-value {
+        color: var(--red);
+      }
+      .stat-card.highlight-yellow .stat-value {
+        color: var(--yellow);
+      }
+      .stat-card.highlight-teal .stat-value {
+        color: var(--teal);
+      }
+      .stat-card.highlight-accent .stat-value {
+        color: var(--accent);
+      }
+
+      .stat-bar {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        height: 2px;
+        background: var(--accent);
+        transition: width 1s ease;
+      }
+      .stat-bar.red {
+        background: var(--red);
+      }
+      .stat-bar.teal {
+        background: var(--teal);
+      }
+
+      /* Charts area */
+      .charts-area {
+        display: grid;
+        grid-template-columns: 380px 1fr;
+        min-height: 0;
+        overflow: hidden;
+      }
+
+      /* Left — pie + intent */
+      .charts-left {
+        border-right: 1px solid var(--border);
+        display: flex;
+        flex-direction: column;
+        overflow-y: auto;
+      }
+
+      .chart-block {
+        padding: 20px 24px;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .chart-block-title {
+        font-size: 10px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--dim);
+        margin-bottom: 16px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .chart-block-title::after {
+        content: "";
+        flex: 1;
+        height: 1px;
+        background: var(--border);
+      }
+
+      .pie-wrap {
+        position: relative;
+        width: 200px;
+        height: 200px;
+        margin: 0 auto 16px;
+      }
+
+      .pie-center {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        pointer-events: none;
+        transition: opacity 0.15s ease;
+      }
+      .pie-center-val {
+        font-family: var(--sans);
+        font-size: 28px;
+        font-weight: 800;
+        color: var(--text-hi);
+        line-height: 1;
+      }
+      .pie-center-label {
+        font-size: 9px;
+        color: var(--dim);
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .legend-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 10px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        transition: border-color 0.2s;
+      }
+      .legend-item:hover {
+        border-color: var(--border-hi);
+      }
+
+      .legend-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 2px;
+        flex-shrink: 0;
+      }
+      .legend-name {
+        flex: 1;
+        font-size: 11px;
+        color: var(--text);
+      }
+      .legend-count {
+        font-size: 11px;
+        font-weight: 600;
+      }
+      .legend-pct {
+        font-size: 10px;
+        color: var(--dim);
+        margin-left: 4px;
+      }
+
+      /* Intent score */
+      .intent-block {
+        padding: 20px 24px;
+      }
+
+      .intent-score-wrap {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        margin-bottom: 16px;
+      }
+
+      .intent-ring {
+        position: relative;
+        width: 80px;
+        height: 80px;
+        flex-shrink: 0;
+      }
+      .intent-ring svg {
+        width: 80px;
+        height: 80px;
+        transform: rotate(-90deg);
+      }
+      .intent-ring-bg {
+        fill: none;
+        stroke: var(--border);
+        stroke-width: 6;
+      }
+      .intent-ring-fill {
+        fill: none;
+        stroke-width: 6;
+        stroke-linecap: round;
+        stroke-dasharray: 220;
+        stroke-dashoffset: 220;
+        transition: stroke-dashoffset 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      .intent-ring-label {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+      }
+      .intent-ring-pct {
+        font-family: var(--sans);
+        font-size: 18px;
+        font-weight: 800;
+        line-height: 1;
+      }
+      .intent-ring-sub {
+        font-size: 8px;
+        color: var(--dim);
+        letter-spacing: 0.06em;
+      }
+
+      .intent-verdict {
+        flex: 1;
+      }
+      .intent-verdict-label {
+        font-size: 9px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--dim);
+        margin-bottom: 4px;
+      }
+      .intent-verdict-val {
+        font-family: var(--sans);
+        font-size: 18px;
+        font-weight: 800;
+        letter-spacing: -0.01em;
+        margin-bottom: 4px;
+      }
+      .intent-verdict-val.high {
+        color: var(--red);
+      }
+      .intent-verdict-val.medium {
+        color: var(--yellow);
+      }
+      .intent-verdict-val.low {
+        color: var(--teal);
+      }
+      .intent-verdict-desc {
+        font-size: 10px;
+        color: var(--dim);
+        line-height: 1.6;
+      }
+
+      .conclusion-box {
+        padding: 12px 14px;
+        background: var(--red-lo);
+        border: 1px solid rgba(255, 77, 77, 0.2);
+        border-left: 3px solid var(--red);
+        border-radius: 4px;
+        font-size: 11px;
+        color: var(--text);
+        line-height: 1.7;
+      }
+      .conclusion-box.low {
+        background: var(--teal-lo);
+        border-color: rgba(0, 200, 160, 0.2);
+        border-left-color: var(--teal);
+      }
+      .conclusion-box strong {
+        display: block;
+        font-size: 10px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        margin-bottom: 4px;
+      }
+      .conclusion-box.high strong {
+        color: var(--red);
+      }
+      .conclusion-box.low strong {
+        color: var(--teal);
+      }
+
+      /* Right — entropy graph */
+      .charts-right {
+        display: flex;
+        flex-direction: column;
+        padding: 20px 24px;
+        overflow: hidden;
+        min-height: 0;
+      }
+
+      .entropy-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 12px;
+        flex-shrink: 0;
+      }
+
+      .entropy-legend {
+        display: flex;
+        gap: 14px;
+        align-items: center;
+      }
+      .entropy-legend-item {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 10px;
+        color: var(--dim);
+      }
+      .elc {
+        width: 24px;
+        height: 2px;
+        border-radius: 1px;
+      }
+
+      .chart-canvas-wrap {
+        flex: 1;
+        min-height: 0;
+        position: relative;
+      }
+
+      /* Idle / scanning overlay */
+      .scan-overlay {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: var(--panel);
+        border: 1px dashed var(--border-hi);
+        border-radius: 6px;
+        gap: 12px;
+      }
+      .scan-overlay.hidden {
+        display: none;
+      }
+
+      .scan-overlay-icon {
+        width: 48px;
+        height: 48px;
+        border: 1.5px solid var(--border-hi);
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .scan-overlay-icon svg {
+        width: 22px;
+        height: 22px;
+        stroke: var(--dim);
+      }
+      .scan-overlay p {
+        font-size: 11px;
+        color: var(--dim);
+      }
+
+      .scan-anim {
+        width: 200px;
+        height: 3px;
+        background: var(--border);
+        border-radius: 2px;
+        overflow: hidden;
+        display: none;
+      }
+      .scan-anim.running {
+        display: block;
+      }
+      .scan-anim-fill {
+        height: 100%;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          var(--accent),
+          transparent
+        );
+        animation: scanMove 1.4s ease-in-out infinite;
+        width: 60%;
+      }
+      @keyframes scanMove {
+        0% {
+          transform: translateX(-100%);
+        }
+        100% {
+          transform: translateX(350%);
+        }
+      }
+
+      /* ────────────────────────────────────────
+       TAB 2 — REGIONS
+    ──────────────────────────────────────── */
+      .regions-layout {
+        flex: 1;
+        min-height: 0;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .regions-toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 24px;
+        border-bottom: 1px solid var(--border);
+        flex-shrink: 0;
+        gap: 12px;
+      }
+
+      .filter-group {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+      }
+
+      .filter-label {
+        font-size: 10px;
+        color: var(--dim);
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        margin-right: 4px;
+      }
+
+      .filter-chip {
+        padding: 4px 10px;
+        border-radius: 3px;
+        border: 1px solid var(--border-hi);
+        background: none;
+        color: var(--text-lo);
+        font-family: var(--mono);
+        font-size: 10px;
+        letter-spacing: 0.04em;
+        cursor: pointer;
+        transition: all 0.15s;
+      }
+      .filter-chip:hover {
+        border-color: var(--text-lo);
+        color: var(--text);
+      }
+      .filter-chip.active {
+        background: var(--accent-lo);
+        border-color: rgba(232, 255, 71, 0.3);
+        color: var(--accent);
+      }
+      .filter-chip.zero.active {
+        background: var(--blue-lo);
+        border-color: rgba(77, 159, 255, 0.3);
+        color: var(--blue);
+      }
+      .filter-chip.ff.active {
+        background: var(--yellow-lo);
+        border-color: rgba(255, 204, 0, 0.3);
+        color: var(--yellow);
+      }
+      .filter-chip.random.active {
+        background: var(--red-lo);
+        border-color: rgba(255, 77, 77, 0.3);
+        color: var(--red);
+      }
+      .filter-chip.multi.active {
+        background: var(--purple-lo);
+        border-color: rgba(192, 132, 252, 0.3);
+        color: var(--purple);
+      }
+
+      .search-input {
+        background: var(--panel);
+        border: 1px solid var(--border-hi);
+        border-radius: 4px;
+        padding: 6px 12px;
+        color: var(--text);
+        font-family: var(--mono);
+        font-size: 11px;
+        outline: none;
+        width: 200px;
+        transition: border-color 0.2s;
+      }
+      .search-input::placeholder {
+        color: var(--text-lo);
+      }
+      .search-input:focus {
+        border-color: var(--accent);
+      }
+
+      .regions-table-wrap {
+        flex: 1;
+        min-height: 0;
+        overflow-y: auto;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      thead {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        background: var(--panel2);
+      }
+
+      thead th {
+        padding: 10px 16px;
+        text-align: left;
+        font-size: 9px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--dim);
+        border-bottom: 1px solid var(--border);
+        font-weight: 600;
+        cursor: pointer;
+        user-select: none;
+        white-space: nowrap;
+      }
+      thead th:hover {
+        color: var(--text);
+      }
+      thead th.sorted {
+        color: var(--accent);
+      }
+
+      tbody tr {
+        border-bottom: 1px solid var(--border);
+        transition: background 0.1s;
+      }
+      tbody tr:hover {
+        background: var(--panel);
+      }
+
+      tbody td {
+        padding: 10px 16px;
+        font-size: 11px;
+        color: var(--text);
+        white-space: nowrap;
+      }
+
+      .td-offset {
+        color: var(--dim);
+        font-size: 10px;
+        font-family: var(--mono);
+      }
+
+      .wipe-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 2px 8px;
+        border-radius: 2px;
+        font-size: 9px;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+      }
+      .badge-zero {
+        background: var(--blue-lo);
+        color: var(--blue);
+        border: 1px solid rgba(77, 159, 255, 0.25);
+      }
+      .badge-ff {
+        background: var(--yellow-lo);
+        color: var(--yellow);
+        border: 1px solid rgba(255, 204, 0, 0.25);
+      }
+      .badge-random {
+        background: var(--red-lo);
+        color: var(--red);
+        border: 1px solid rgba(255, 77, 77, 0.25);
+      }
+      .badge-multi {
+        background: var(--purple-lo);
+        color: var(--purple);
+        border: 1px solid rgba(192, 132, 252, 0.25);
+      }
+
+      .confidence-bar-wrap {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .confidence-bar {
+        width: 60px;
+        height: 4px;
+        background: var(--border);
+        border-radius: 2px;
+        overflow: hidden;
+      }
+      .confidence-fill {
+        height: 100%;
+        border-radius: 2px;
+      }
+      .conf-high {
+        background: var(--teal);
+      }
+      .conf-med {
+        background: var(--yellow);
+      }
+      .conf-low {
+        background: var(--dim);
+      }
+      .confidence-val {
+        font-size: 10px;
+        color: var(--dim);
+      }
+
+      .empty-state {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        padding: 60px;
+        color: var(--text-lo);
+        font-size: 11px;
+      }
+      .empty-state svg {
+        stroke: var(--muted);
+      }
+
+      /* ────────────────────────────────────────
+       TAB 3 — RAW DATA
+    ──────────────────────────────────────── */
+      .raw-layout {
+        flex: 1;
+        min-height: 0;
+        overflow: hidden;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .raw-panel {
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        border-right: 1px solid var(--border);
+      }
+      .raw-panel:last-child {
+        border-right: none;
+      }
+
+      .raw-panel-header {
+        padding: 14px 20px;
+        border-bottom: 1px solid var(--border);
+        font-size: 10px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--dim);
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .raw-scroll {
+        flex: 1;
+        overflow-y: auto;
+        padding: 16px 20px;
+      }
+
+      .hex-row {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 4px;
+        font-size: 11px;
+        line-height: 1.8;
+      }
+      .hex-addr {
+        color: var(--text-lo);
+        width: 72px;
+        flex-shrink: 0;
+      }
+      .hex-bytes {
+        color: var(--text);
+        flex: 1;
+        letter-spacing: 0.06em;
+        word-break: break-all;
+      }
+      .hex-bytes .h-zero {
+        color: var(--blue);
+      }
+      .hex-bytes .h-ff {
+        color: var(--yellow);
+      }
+      .hex-bytes .h-hi {
+        color: var(--red);
+      }
+      .hex-bytes .h-norm {
+        color: var(--text);
+      }
+
+      .block-selector {
+        padding: 10px 20px;
+        border-top: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-shrink: 0;
+        font-size: 11px;
+        color: var(--dim);
+      }
+      .block-nav-btn {
+        padding: 4px 10px;
+        background: var(--surface);
+        border: 1px solid var(--border-hi);
+        border-radius: 3px;
+        color: var(--text);
+        font-family: var(--mono);
+        font-size: 11px;
+        cursor: pointer;
+        transition: all 0.15s;
+      }
+      .block-nav-btn:hover {
+        border-color: var(--accent);
+        color: var(--accent);
+      }
+      .block-nav-btn:disabled {
+        opacity: 0.35;
+        cursor: not-allowed;
+      }
+
+      .block-id-input {
+        width: 70px;
+        background: var(--panel);
+        border: 1px solid var(--border-hi);
+        border-radius: 3px;
+        padding: 4px 8px;
+        color: var(--text);
+        font-family: var(--mono);
+        font-size: 11px;
+        outline: none;
+        text-align: center;
+      }
+      .block-id-input:focus {
+        border-color: var(--accent);
+      }
+
+      .entropy-mini {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-left: auto;
+      }
+      .entropy-val-big {
+        font-family: var(--sans);
+        font-size: 16px;
+        font-weight: 700;
+        line-height: 1;
+      }
+      .entropy-label {
+        font-size: 9px;
+        color: var(--dim);
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      /* Byte histogram */
+      .hist-canvas-wrap {
+        flex: 1;
+        min-height: 0;
+        padding: 16px 20px 0;
+        position: relative;
+      }
+
+      /* ── Footer ── */
+      footer {
+        height: 34px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 32px;
+        border-top: 1px solid var(--border);
+        background: var(--surface);
+        font-size: 10px;
+        color: var(--text-lo);
+        letter-spacing: 0.04em;
+        flex-shrink: 0;
+      }
+
+      /* Scrollbars */
+      ::-webkit-scrollbar {
+        width: 5px;
+        height: 5px;
+      }
+      ::-webkit-scrollbar-track {
+        background: var(--panel);
+      }
+      ::-webkit-scrollbar-thumb {
+        background: var(--border-hi);
+        border-radius: 3px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: var(--muted);
+      }
+
+      /* Animations */
+      .stagger > * {
+        opacity: 0;
+        animation: fadeUp 0.35s ease forwards;
+      }
+      .stagger > *:nth-child(1) {
+        animation-delay: 0.05s;
+      }
+      .stagger > *:nth-child(2) {
+        animation-delay: 0.1s;
+      }
+      .stagger > *:nth-child(3) {
+        animation-delay: 0.15s;
+      }
+      .stagger > *:nth-child(4) {
+        animation-delay: 0.2s;
+      }
+      .stagger > *:nth-child(5) {
+        animation-delay: 0.25s;
+      }
+
+      @keyframes fadeUp {
+        from {
+          opacity: 0;
+          transform: translateY(8px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .count-anim {
+        transition: all 0.3s ease;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <!-- Nav -->
+      <nav>
+        <div class="nav-left">
+          <div class="nav-logo">
+            <div class="nav-logo-mark">
+              <svg
+                viewBox="0 0 16 16"
+                fill="none"
+                stroke="#000"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M3 3h10v10H3z" />
+                <path d="M3 8h3M10 8h3M8 3v3M8 10v3" />
+              </svg>
+            </div>
+            WipeTrace
+          </div>
+          <div class="nav-divider"></div>
+          <div class="nav-session">
+            SESSION <strong id="navSession">SID-A3F8C21E</strong>
+          </div>
+        </div>
+        <div class="nav-right">
+          <div class="nav-file-info">
+            <span class="fname" id="navFilename">suspect_drive.dd</span>
+            <span class="fmeta" id="navFilemeta"
+              >4.20 GB · SHA-256: e3b0c44298fc1c14…</span
+            >
+          </div>
+        </div>
+      </nav>
+
+      <!-- Step Bar -->
+      <div class="step-bar">
+        <div class="step-item done">
+          <div class="step-num">✓</div>
+          Upload Image
+        </div>
+        <span class="step-arrow">›</span>
+        <div class="step-item active">
+          <div class="step-num">2</div>
+          Scan &amp; Detect
+        </div>
+        <span class="step-arrow">›</span>
+        <div class="step-item">
+          <div class="step-num">3</div>
+          Analysis Dashboard
+        </div>
+        <span class="step-arrow">›</span>
+        <div class="step-item">
+          <div class="step-num">4</div>
+          Export Report
+        </div>
+      </div>
+
+      <!-- Toolbar -->
+      <div class="toolbar">
+        <div class="toolbar-left">
+          <div class="tab-group">
+            <button
+              class="tab-btn active"
+              onclick="switchTab('overview', this)"
+            >
+              Overview
+            </button>
+            <button class="tab-btn" onclick="switchTab('regions', this)">
+              Regions
+            </button>
+            <button class="tab-btn" onclick="switchTab('raw', this)">
+              Raw Data
+            </button>
+          </div>
+          <div class="toolbar-divider"></div>
+          <div class="scan-status idle" id="scanStatus">
+            <span class="dot"></span>
+            <span id="scanStatusText">Awaiting scan</span>
+          </div>
+        </div>
+        <div class="toolbar-right">
+          <button
+            class="btn-export"
+            id="exportBtn"
+            disabled
+            onclick="exportCSV()"
+          >
+            <svg
+              width="12"
+              height="12"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" />
+            </svg>
+            Export CSV
+          </button>
+          <button class="btn-scan" id="scanBtn" onclick="runScan()">
+            <svg
+              width="12"
+              height="12"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <polygon points="5 3 19 12 5 21 5 3" />
+            </svg>
+            Run Scan
+          </button>
+        </div>
+      </div>
+
+      <!-- Body -->
+      <div class="body">
+        <div class="tab-panels">
+          <!-- ── TAB: OVERVIEW ── -->
+          <div class="tab-panel active" id="panel-overview">
+            <div class="overview-layout">
+              <!-- Stat Row -->
+              <div class="stat-row stagger" id="statRow">
+                <div class="stat-card">
+                  <span class="stat-label">Blocks Scanned</span>
+                  <span class="stat-value" id="stat-blocks">—</span>
+                  <span class="stat-sub" id="stat-blocks-sub">4 KB each</span>
+                  <div class="stat-bar" id="bar-blocks" style="width: 0%"></div>
+                </div>
+                <div class="stat-card highlight-red">
+                  <span class="stat-label">Suspicious Blocks</span>
+                  <span class="stat-value" id="stat-suspicious">—</span>
+                  <span class="stat-sub" id="stat-suspicious-sub"
+                    >—% of total</span
+                  >
+                  <div
+                    class="stat-bar red"
+                    id="bar-suspicious"
+                    style="width: 0%"
+                  ></div>
+                </div>
+                <div class="stat-card highlight-teal">
+                  <span class="stat-label">Regions Detected</span>
+                  <span class="stat-value" id="stat-regions">—</span>
+                  <span class="stat-sub">Contiguous groups</span>
+                  <div
+                    class="stat-bar teal"
+                    id="bar-regions"
+                    style="width: 0%"
+                  ></div>
+                </div>
+                <div class="stat-card highlight-yellow">
+                  <span class="stat-label">Avg Entropy (flagged)</span>
+                  <span class="stat-value" id="stat-entropy">—</span>
+                  <span class="stat-sub">bits / byte</span>
+                </div>
+                <div class="stat-card highlight-accent">
+                  <span class="stat-label">Intent Score</span>
+                  <span class="stat-value" id="stat-intent">—</span>
+                  <span class="stat-sub" id="stat-intent-label">—</span>
+                </div>
+              </div>
+
+              <!-- Charts -->
+              <div class="charts-area">
+                <!-- Left panel -->
+                <div class="charts-left">
+                  <!-- Pie -->
+                  <div class="chart-block">
+                    <div class="chart-block-title">Wipe Type Distribution</div>
+                    <div class="pie-wrap">
+                      <canvas id="pieChart"></canvas>
+                      <div class="pie-center" id="pieCenter">
+                        <span class="pie-center-val" id="pieCenterVal">—</span>
+                        <span class="pie-center-label">Wipe Blocks</span>
+                      </div>
+                    </div>
+                    <div class="legend-list" id="legendList">
+                      <div class="legend-item">
+                        <span
+                          class="legend-dot"
+                          style="background: var(--blue)"
+                        ></span>
+                        <span class="legend-name">Zero Fill (0x00)</span>
+                        <span
+                          class="legend-count"
+                          style="color: var(--blue)"
+                          id="leg-zero"
+                          >—</span
+                        >
+                        <span class="legend-pct" id="leg-zero-pct"></span>
+                      </div>
+                      <div class="legend-item">
+                        <span
+                          class="legend-dot"
+                          style="background: var(--yellow)"
+                        ></span>
+                        <span class="legend-name">FF Fill (0xFF)</span>
+                        <span
+                          class="legend-count"
+                          style="color: var(--yellow)"
+                          id="leg-ff"
+                          >—</span
+                        >
+                        <span class="legend-pct" id="leg-ff-pct"></span>
+                      </div>
+                      <div class="legend-item">
+                        <span
+                          class="legend-dot"
+                          style="background: var(--red)"
+                        ></span>
+                        <span class="legend-name">Random Overwrite</span>
+                        <span
+                          class="legend-count"
+                          style="color: var(--red)"
+                          id="leg-rand"
+                          >—</span
+                        >
+                        <span class="legend-pct" id="leg-rand-pct"></span>
+                      </div>
+                      <div class="legend-item">
+                        <span
+                          class="legend-dot"
+                          style="background: var(--purple)"
+                        ></span>
+                        <span class="legend-name">Multi-Pass</span>
+                        <span
+                          class="legend-count"
+                          style="color: var(--purple)"
+                          id="leg-multi"
+                          >—</span
+                        >
+                        <span class="legend-pct" id="leg-multi-pct"></span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Intent -->
+                  <div class="intent-block">
+                    <div class="chart-block-title">Forensic Intent Score</div>
+                    <div class="intent-score-wrap">
+                      <div class="intent-ring">
+                        <svg viewBox="0 0 80 80">
+                          <circle
+                            class="intent-ring-bg"
+                            cx="40"
+                            cy="40"
+                            r="34"
+                          />
+                          <circle
+                            class="intent-ring-fill"
+                            id="intentRingFill"
+                            cx="40"
+                            cy="40"
+                            r="34"
+                            stroke="var(--red)"
+                          />
+                        </svg>
+                        <div class="intent-ring-label">
+                          <span
+                            class="intent-ring-pct"
+                            id="intentRingPct"
+                            style="color: var(--red)"
+                            >—</span
+                          >
+                          <span class="intent-ring-sub">score</span>
+                        </div>
+                      </div>
+                      <div class="intent-verdict">
+                        <div class="intent-verdict-label">Verdict</div>
+                        <div class="intent-verdict-val high" id="intentVerdict">
+                          —
+                        </div>
+                        <div class="intent-verdict-desc" id="intentDesc">
+                          Run a scan to generate the forensic intent assessment.
+                        </div>
+                      </div>
+                    </div>
+                    <div class="conclusion-box high" id="conclusionBox">
+                      <strong>Awaiting Analysis</strong>
+                      Load a disk image and run the scan to generate the
+                      forensic conclusion.
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Right — Entropy graph -->
+                <div class="charts-right">
+                  <div class="entropy-header">
+                    <div class="chart-block-title" style="margin-bottom: 0">
+                      Entropy vs Block Offset
+                    </div>
+                    <div class="entropy-legend">
+                      <div class="entropy-legend-item">
+                        <span
+                          class="elc"
+                          style="background: rgba(77, 159, 255, 0.6)"
+                        ></span>
+                        Normal
+                      </div>
+                      <div class="entropy-legend-item">
+                        <span class="elc" style="background: var(--red)"></span>
+                        Flagged
+                      </div>
+                      <div class="entropy-legend-item">
+                        <span
+                          class="elc"
+                          style="
+                            background: var(--accent);
+                            height: 1px;
+                            border-top: 1px dashed var(--accent);
+                          "
+                        ></span>
+                        Threshold
+                      </div>
+                    </div>
+                  </div>
+                  <div class="chart-canvas-wrap">
+                    <canvas id="entropyChart"></canvas>
+                    <div class="scan-overlay" id="entropyOverlay">
+                      <div class="scan-overlay-icon">
+                        <svg
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke-width="1.5"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                        >
+                          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+                        </svg>
+                      </div>
+                      <p id="overlayMsg">
+                        No scan data yet — press Run Scan to begin
+                      </p>
+                      <div class="scan-anim" id="scanAnim">
+                        <div class="scan-anim-fill"></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── TAB: REGIONS ── -->
+          <div class="tab-panel" id="panel-regions">
+            <div class="regions-layout">
+              <div class="regions-toolbar">
+                <div class="filter-group">
+                  <span class="filter-label">Filter</span>
+                  <button
+                    class="filter-chip active"
+                    data-filter="all"
+                    onclick="filterRegions('all', this)"
+                  >
+                    All
+                  </button>
+                  <button
+                    class="filter-chip zero"
+                    data-filter="ZERO_WIPE"
+                    onclick="filterRegions('ZERO_WIPE', this)"
+                  >
+                    0x00
+                  </button>
+                  <button
+                    class="filter-chip ff"
+                    data-filter="FF_WIPE"
+                    onclick="filterRegions('FF_WIPE', this)"
+                  >
+                    0xFF
+                  </button>
+                  <button
+                    class="filter-chip random"
+                    data-filter="RANDOM_WIPE"
+                    onclick="filterRegions('RANDOM_WIPE', this)"
+                  >
+                    Random
+                  </button>
+                  <button
+                    class="filter-chip multi"
+                    data-filter="MULTI_PASS"
+                    onclick="filterRegions('MULTI_PASS', this)"
+                  >
+                    Multi-Pass
+                  </button>
+                </div>
+                <input
+                  class="search-input"
+                  type="text"
+                  placeholder="Search offset…"
+                  oninput="searchRegions(this.value)"
+                  id="regionSearch"
+                />
+              </div>
+              <div class="regions-table-wrap">
+                <table id="regionsTable">
+                  <thead>
+                    <tr>
+                      <th onclick="sortTable('id')">#</th>
+                      <th onclick="sortTable('start')">Start Offset ↕</th>
+                      <th onclick="sortTable('end')">End Offset</th>
+                      <th onclick="sortTable('size')">Size ↕</th>
+                      <th onclick="sortTable('type')">Wipe Type ↕</th>
+                      <th onclick="sortTable('entropy')">Avg Entropy ↕</th>
+                      <th onclick="sortTable('confidence')">Confidence ↕</th>
+                      <th>Blocks</th>
+                    </tr>
+                  </thead>
+                  <tbody id="regionsBody">
+                    <tr>
+                      <td colspan="8">
+                        <div class="empty-state">
+                          <svg
+                            width="32"
+                            height="32"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke-width="1.5"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                          >
+                            <circle cx="11" cy="11" r="8" />
+                            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                          </svg>
+                          No regions detected yet — run a scan first
+                        </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── TAB: RAW DATA ── -->
+          <div class="tab-panel" id="panel-raw">
+            <div class="raw-layout">
+              <!-- Hex viewer -->
+              <div class="raw-panel">
+                <div class="raw-panel-header">
+                  <span>Hex View — Block <span id="hexBlockId">—</span></span>
+                  <span
+                    id="hexBlockType"
+                    style="font-size: 10px; color: var(--dim)"
+                    >—</span
+                  >
+                </div>
+                <div class="raw-scroll" id="hexScroll">
+                  <div class="empty-state" style="margin-top: 40px">
+                    <svg
+                      width="28"
+                      height="28"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke-width="1.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
+                      <line x1="8" y1="21" x2="16" y2="21" />
+                      <line x1="12" y1="17" x2="12" y2="21" />
+                    </svg>
+                    Run scan then select a block
+                  </div>
+                </div>
+                <div class="block-selector">
+                  <button
+                    class="block-nav-btn"
+                    id="prevBlockBtn"
+                    onclick="navigateBlock(-1)"
+                    disabled
+                  >
+                    ‹ Prev
+                  </button>
+                  Block
+                  <input
+                    class="block-id-input"
+                    type="number"
+                    id="blockIdInput"
+                    value="0"
+                    min="0"
+                    onchange="jumpToBlock(parseInt(this.value))"
+                  />
+                  <button
+                    class="block-nav-btn"
+                    id="nextBlockBtn"
+                    onclick="navigateBlock(1)"
+                    disabled
+                  >
+                    Next ›
+                  </button>
+                  <div class="entropy-mini">
+                    <div>
+                      <div
+                        class="entropy-val-big"
+                        id="hexEntropyVal"
+                        style="color: var(--text-hi)"
+                      >
+                        —
+                      </div>
+                      <div class="entropy-label">H (bits)</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Byte histogram -->
+              <div class="raw-panel">
+                <div class="raw-panel-header">
+                  <span
+                    >Byte Frequency Distribution — Block
+                    <span id="histBlockId">—</span></span
+                  >
+                </div>
+                <div class="hist-canvas-wrap">
+                  <canvas id="histChart"></canvas>
+                  <div class="scan-overlay" id="histOverlay">
+                    <div class="scan-overlay-icon">
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke-width="1.5"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      >
+                        <line x1="18" y1="20" x2="18" y2="10" />
+                        <line x1="12" y1="20" x2="12" y2="4" />
+                        <line x1="6" y1="20" x2="6" y2="14" />
+                      </svg>
+                    </div>
+                    <p>Select a block to view byte distribution</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <footer>
+        <div>
+          WipeTrace DFIR Engine · Block Size: 4096 B · Threshold H &gt; 7.8
+        </div>
+        <div id="footerScanTime">Last scan: never</div>
+      </footer>
+    </div>
+
+    <script>
+      // ─────────────────────────────────────────
+      // CONFIG
+      // ─────────────────────────────────────────
+      const API_BASE = "http://localhost:8000";
+      const POLL_MS = 2000;
+      const SESSION_ID =
+        new URLSearchParams(window.location.search).get("session") || null;
+
+      // ─────────────────────────────────────────
+      // JSON ADAPTER
+      // Normalises backend snake_case schema to
+      // the camelCase shape the rest of the UI uses
+      // ─────────────────────────────────────────
+      function adaptApiResponse(json) {
+        const regions = (json.regions || []).map((r) => ({
+          id: r.id,
+          start: r.start,
+          end: r.end,
+          size: r.size,
+          type: r.type,
+          entropy: r.entropy,
+          confidence: r.confidence,
+          blockCount: r.block_count,
+        }));
+        return {
+          blocks: json.blocks || [],
+          regions,
+          totalBlocks: json.stats.total_blocks,
+          stats: json.stats,
+        };
+      }
+
+      // ─────────────────────────────────────────
+      // STATE
+      // ─────────────────────────────────────────
+      let scanData = null;
+      let activeFilter = "all";
+      let sortKey = null;
+      let sortDir = 1;
+      let currentBlockIdx = 0;
+      let pieChartInst = null;
+      let entropyChartInst = null;
+      let histChartInst = null;
+      let pollTimer = null;
+
+      // ─────────────────────────────────────────
+      // SCAN — real API flow
+      // ─────────────────────────────────────────
+      async function runScan() {
+        if (!SESSION_ID) {
+          alert(
+            "No session ID found.\nOpen this page from the upload module — do not open analysis_dashboard.html directly.",
+          );
+          return;
+        }
+
+        const btn = document.getElementById("scanBtn");
+        const status = document.getElementById("scanStatus");
+        const statusText = document.getElementById("scanStatusText");
+        const overlay = document.getElementById("entropyOverlay");
+        const scanAnim = document.getElementById("scanAnim");
+        const overlayMsg = document.getElementById("overlayMsg");
+
+        btn.classList.add("scanning");
+        btn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg> Scanning…`;
+        btn.disabled = true;
+        status.className = "scan-status running";
+        statusText.textContent = "Initialising scan…";
+        overlayMsg.textContent = "Starting scan engine…";
+        scanAnim.classList.add("running");
+
+        // ── Step 1: POST /scan ──────────────────────────────────────────────
+        try {
+          const triggerRes = await fetch(`${API_BASE}/scan`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ session_id: SESSION_ID }),
+          });
+          if (!triggerRes.ok) {
+            const err = await triggerRes.json().catch(() => ({}));
+            throw new Error(err.detail || `HTTP ${triggerRes.status}`);
+          }
+        } catch (e) {
+          _scanError(`Failed to start scan: ${e.message}`);
+          return;
+        }
+
+        // ── Step 2: Poll /scan/status every 2s ─────────────────────────────
+        statusText.textContent = "Scan running — analysing blocks…";
+        overlayMsg.textContent = "Scanning disk image…";
+
+        pollTimer = setInterval(async () => {
+          try {
+            const pollRes = await fetch(
+              `${API_BASE}/scan/status/${SESSION_ID}`,
+            );
+            const pollData = await pollRes.json();
+            const pct = pollData.progress || 0;
+            statusText.textContent = `Scanning… ${pct}% complete`;
+            overlayMsg.textContent = `Analysing blocks — ${pct}%`;
+
+            if (pollData.status === "done") {
+              clearInterval(pollTimer);
+              pollTimer = null;
+              _fetchResults();
+            } else if (pollData.status === "error") {
+              clearInterval(pollTimer);
+              pollTimer = null;
+              _scanError(`Engine error: ${pollData.error || "unknown"}`);
+            }
+          } catch (e) {
+            clearInterval(pollTimer);
+            pollTimer = null;
+            _scanError(`Lost connection to server: ${e.message}`);
+          }
+        }, POLL_MS);
+      }
+
+      // ── Step 3: fetch real results and load into UI ─────────────────────
+      async function _fetchResults() {
+        const statusText = document.getElementById("scanStatusText");
+        statusText.textContent = "Loading results…";
+        try {
+          const res = await fetch(`${API_BASE}/results/${SESSION_ID}`);
+          if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            throw new Error(err.detail || `HTTP ${res.status}`);
+          }
+          const json = await res.json();
+          scanData = adaptApiResponse(json);
+          finalizeScan();
+        } catch (e) {
+          _scanError(`Failed to load results: ${e.message}`);
+        }
+      }
+
+      // ── Error handler ───────────────────────────────────────────────────
+      function _scanError(message) {
+        const btn = document.getElementById("scanBtn");
+        const status = document.getElementById("scanStatus");
+        const statusText = document.getElementById("scanStatusText");
+        const scanAnim = document.getElementById("scanAnim");
+        const overlayMsg = document.getElementById("overlayMsg");
+        btn.classList.remove("scanning");
+        btn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg> Retry`;
+        btn.disabled = false;
+        status.className = "scan-status idle";
+        statusText.textContent = "Scan failed — check console (F12)";
+        overlayMsg.textContent = message;
+        scanAnim.classList.remove("running");
+        console.error("[WipeTrace]", message);
+      }
+
+      function finalizeScan() {
+        const btn = document.getElementById("scanBtn");
+        const status = document.getElementById("scanStatus");
+        const statusText = document.getElementById("scanStatusText");
+        const overlay = document.getElementById("entropyOverlay");
+        const scanAnim = document.getElementById("scanAnim");
+
+        btn.classList.remove("scanning");
+        btn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg> Re-Scan`;
+        btn.disabled = false;
+
+        status.className = "scan-status done";
+        statusText.textContent = `Scan complete — ${scanData.regions.length} regions found`;
+        overlay.classList.add("hidden");
+        scanAnim.classList.remove("running");
+
+        document.getElementById("exportBtn").disabled = false;
+        document.getElementById("footerScanTime").textContent =
+          `Last scan: ${new Date().toLocaleTimeString()}`;
+
+        renderStats();
+        renderPie();
+        renderEntropyChart();
+        renderRegionsTable();
+
+        // Enable raw data
+        document.getElementById("prevBlockBtn").disabled = false;
+        document.getElementById("nextBlockBtn").disabled = false;
+
+        // Step bar advance
+        document.querySelectorAll(".step-item")[2].classList.add("active");
+      }
+
+      // ─────────────────────────────────────────
+      // STATS
+      // ─────────────────────────────────────────
+      function renderStats() {
+        const d = scanData;
+        const suspicious = d.blocks.filter((b) => b.type !== "NORMAL").length;
+        const pct = ((suspicious / d.totalBlocks) * 100).toFixed(1);
+        const avgE =
+          suspicious > 0
+            ? (
+                d.blocks
+                  .filter((b) => b.type !== "NORMAL")
+                  .reduce((s, b) => s + b.entropy, 0) / suspicious
+              ).toFixed(2)
+            : "0.00";
+
+        // Intent score
+        const intentScore = Math.min(
+          100,
+          Math.round(
+            (suspicious / d.totalBlocks) * 100 * 4.5 + d.regions.length * 1.2,
+          ),
+        );
+        const intentLabel =
+          intentScore >= 70 ? "HIGH" : intentScore >= 35 ? "MEDIUM" : "LOW";
+
+        animateCount("stat-blocks", d.totalBlocks.toLocaleString());
+        animateCount("stat-suspicious", suspicious.toLocaleString());
+        animateCount("stat-regions", d.regions.length.toString());
+        animateCount("stat-entropy", avgE);
+        animateCount("stat-intent", intentScore + "%");
+
+        document.getElementById("stat-suspicious-sub").textContent =
+          pct + "% of total";
+        document.getElementById("stat-intent-label").textContent = intentLabel;
+
+        // Bars
+        setTimeout(() => {
+          document.getElementById("bar-blocks").style.width = "100%";
+          document.getElementById("bar-suspicious").style.width =
+            Math.min(100, parseFloat(pct) * 5) + "%";
+          document.getElementById("bar-regions").style.width =
+            Math.min(100, d.regions.length * 8) + "%";
+        }, 100);
+
+        // Intent ring
+        const circumference = 2 * Math.PI * 34;
+        const offset = circumference * (1 - intentScore / 100);
+        const ringColor =
+          intentScore >= 70
+            ? "var(--red)"
+            : intentScore >= 35
+              ? "var(--yellow)"
+              : "var(--teal)";
+        const ring = document.getElementById("intentRingFill");
+        ring.style.stroke = ringColor;
+        ring.style.strokeDasharray = circumference;
+        setTimeout(() => {
+          ring.style.strokeDashoffset = offset;
+        }, 200);
+        document.getElementById("intentRingPct").textContent =
+          intentScore + "%";
+        document.getElementById("intentRingPct").style.color = ringColor;
+
+        // Verdict
+        const vEl = document.getElementById("intentVerdict");
+        vEl.textContent = intentLabel;
+        vEl.className = "intent-verdict-val " + intentLabel.toLowerCase();
+
+        const descMap = {
+          HIGH: "Multiple contiguous wipe regions detected. Strong statistical evidence of deliberate data destruction consistent with anti-forensic tool usage.",
+          MEDIUM:
+            "Moderate wipe activity detected. Patterns suggest selective file destruction. Further correlation with execution artefacts recommended.",
+          LOW: "Limited wipe signatures found. May indicate normal disk activity. Low probability of intentional anti-forensic behaviour.",
+        };
+        document.getElementById("intentDesc").textContent =
+          descMap[intentLabel];
+
+        const box = document.getElementById("conclusionBox");
+        box.className = "conclusion-box " + intentLabel.toLowerCase();
+        const typeCount = {};
+        d.regions.forEach((r) => {
+          typeCount[r.type] = (typeCount[r.type] || 0) + 1;
+        });
+        const dominant = Object.entries(typeCount).sort(
+          (a, b) => b[1] - a[1],
+        )[0];
+        box.innerHTML = `<strong>Analysis Conclusion</strong>
+${
+  intentLabel === "HIGH"
+    ? `High probability of deliberate data overwriting detected. ${suspicious.toLocaleString()} blocks (${pct}%) classified as wipe artefacts across ${d.regions.length} distinct regions. Dominant signature: ${dominant[0].replace("_", " ")}. Evidence consistent with intentional evidence destruction.`
+    : intentLabel === "MEDIUM"
+      ? `Moderate wipe activity across ${d.regions.length} regions covering ${pct}% of the imaged space. Primary pattern: ${dominant[0].replace("_", " ")}. Recommend correlating with prefetch and USN journal data.`
+      : `Low level of wipe activity detected (${pct}% of disk). ${d.regions.length} region(s) flagged. No strong indication of deliberate anti-forensic wiping.`
+}`;
+      }
+
+      function animateCount(id, target) {
+        document.getElementById(id).textContent = target;
+      }
+
+      // ─────────────────────────────────────────
+      // PIE CHART
+      // ─────────────────────────────────────────
+      function renderPie() {
+        const d = scanData;
+        const counts = {
+          ZERO_WIPE: 0,
+          FF_WIPE: 0,
+          RANDOM_WIPE: 0,
+          MULTI_PASS: 0,
+        };
+        d.blocks.forEach((b) => {
+          if (counts[b.type] !== undefined) counts[b.type]++;
+        });
+
+        const total = Object.values(counts).reduce((a, b) => a + b, 0);
+
+        document.getElementById("pieCenterVal").textContent =
+          total.toLocaleString();
+
+        // Legend
+        const labels = {
+          ZERO_WIPE: "leg-zero",
+          FF_WIPE: "leg-ff",
+          RANDOM_WIPE: "leg-rand",
+          MULTI_PASS: "leg-multi",
+        };
+        Object.entries(labels).forEach(([type, id]) => {
+          document.getElementById(id).textContent =
+            counts[type].toLocaleString();
+          const pctEl = document.getElementById(id + "-pct");
+          if (pctEl)
+            pctEl.textContent =
+              total > 0
+                ? "(" + ((counts[type] / total) * 100).toFixed(1) + "%)"
+                : "";
+        });
+
+        const colors = ["#4d9fff", "#ffcc00", "#ff4d4d", "#c084fc"];
+        const data = [
+          counts.ZERO_WIPE,
+          counts.FF_WIPE,
+          counts.RANDOM_WIPE,
+          counts.MULTI_PASS,
+        ];
+
+        if (pieChartInst) {
+          pieChartInst.destroy();
+        }
+
+        const ctx = document.getElementById("pieChart").getContext("2d");
+        pieChartInst = new Chart(ctx, {
+          type: "doughnut",
+          data: {
+            labels: ["Zero Fill", "FF Fill", "Random", "Multi-Pass"],
+            datasets: [
+              {
+                data,
+                backgroundColor: colors.map((c) => c + "cc"),
+                borderColor: colors,
+                borderWidth: 1.5,
+                hoverOffset: 6,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            cutout: "72%",
+            onHover: (event, elements) => {
+              const center = document.getElementById("pieCenter");
+              if (elements.length > 0) {
+                // A segment is hovered — fade out center label so tooltip is unobstructed
+                center.style.opacity = "0";
+                center.style.pointerEvents = "none";
+              } else {
+                // Nothing hovered — restore center label
+                center.style.opacity = "1";
+              }
+            },
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                backgroundColor: "#14171a",
+                borderColor: "#2a2f36",
+                borderWidth: 1,
+                titleColor: "#e8ecf0",
+                bodyColor: "#c8cdd4",
+                titleFont: { family: "JetBrains Mono", size: 11 },
+                bodyFont: { family: "JetBrains Mono", size: 11 },
+                callbacks: {
+                  label: (ctx) =>
+                    ` ${ctx.label}: ${ctx.raw.toLocaleString()} blocks`,
+                },
+              },
+            },
+            animation: { animateRotate: true, duration: 800 },
+          },
+        });
+      }
+
+      // ─────────────────────────────────────────
+      // ENTROPY CHART
+      // ─────────────────────────────────────────
+      function renderEntropyChart() {
+        const d = scanData;
+
+        // Sample every N blocks to keep chart performant
+        const SAMPLE = Math.max(1, Math.floor(d.blocks.length / 800));
+        const sampled = d.blocks.filter((_, i) => i % SAMPLE === 0);
+
+        const labels = sampled.map((b) => b.id);
+        const entropies = sampled.map((b) => b.entropy);
+        const colors = sampled.map((b) =>
+          b.type === "NORMAL" ? "rgba(77,159,255,0.5)" : "rgba(255,77,77,0.85)",
+        );
+
+        if (entropyChartInst) {
+          entropyChartInst.destroy();
+        }
+
+        const ctx = document.getElementById("entropyChart").getContext("2d");
+        entropyChartInst = new Chart(ctx, {
+          type: "bar",
+          data: {
+            labels,
+            datasets: [
+              {
+                label: "Entropy",
+                data: entropies,
+                backgroundColor: colors,
+                borderWidth: 0,
+                barPercentage: 1.0,
+                categoryPercentage: 1.0,
+              },
+              {
+                label: "Threshold (7.8)",
+                data: new Array(sampled.length).fill(7.8),
+                type: "line",
+                borderColor: "rgba(232,255,71,0.5)",
+                borderWidth: 1,
+                borderDash: [4, 4],
+                pointRadius: 0,
+                tension: 0,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: { duration: 600 },
+            scales: {
+              x: {
+                ticks: {
+                  color: "#4a5260",
+                  font: { family: "JetBrains Mono", size: 9 },
+                  maxTicksLimit: 10,
+                  callback: (v, i) => {
+                    const block = sampled[i];
+                    return block ? (block.id / 1000).toFixed(0) + "K" : "";
+                  },
+                },
+                grid: { color: "#1e2227", drawBorder: false },
+                title: {
+                  display: true,
+                  text: "Block Offset",
+                  color: "#5c636e",
+                  font: { family: "JetBrains Mono", size: 10 },
+                },
+              },
+              y: {
+                min: 0,
+                max: 8.2,
+                ticks: {
+                  color: "#4a5260",
+                  font: { family: "JetBrains Mono", size: 9 },
+                  stepSize: 1,
+                },
+                grid: { color: "#1e2227", drawBorder: false },
+                title: {
+                  display: true,
+                  text: "Shannon Entropy (bits)",
+                  color: "#5c636e",
+                  font: { family: "JetBrains Mono", size: 10 },
+                },
+              },
+            },
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                backgroundColor: "#14171a",
+                borderColor: "#2a2f36",
+                borderWidth: 1,
+                titleColor: "#e8ecf0",
+                bodyColor: "#c8cdd4",
+                titleFont: { family: "JetBrains Mono", size: 11 },
+                bodyFont: { family: "JetBrains Mono", size: 11 },
+                callbacks: {
+                  title: (items) => `Block ${items[0].label}`,
+                  label: (item) => {
+                    if (item.datasetIndex === 0) {
+                      const b = sampled[item.dataIndex];
+                      return ` H: ${item.raw.toFixed(3)}  Type: ${b.type}`;
+                    }
+                    return " Threshold: 7.8";
+                  },
+                },
+              },
+            },
+          },
+        });
+      }
+
+      // ─────────────────────────────────────────
+      // REGIONS TABLE
+      // ─────────────────────────────────────────
+      function renderRegionsTable() {
+        populateTable(scanData.regions);
+      }
+
+      function populateTable(data) {
+        const body = document.getElementById("regionsBody");
+        if (!data.length) {
+          body.innerHTML = `<tr><td colspan="8"><div class="empty-state">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      No regions match the current filter</div></td></tr>`;
+          return;
+        }
+
+        body.innerHTML = data
+          .map((r) => {
+            const badgeClass =
+              {
+                ZERO_WIPE: "badge-zero",
+                FF_WIPE: "badge-ff",
+                RANDOM_WIPE: "badge-random",
+                MULTI_PASS: "badge-multi",
+              }[r.type] || "";
+            const badgeLabel =
+              {
+                ZERO_WIPE: "0x00 FILL",
+                FF_WIPE: "0xFF FILL",
+                RANDOM_WIPE: "RANDOM",
+                MULTI_PASS: "MULTI-PASS",
+              }[r.type] || r.type;
+            const confClass =
+              r.confidence >= 0.9
+                ? "conf-high"
+                : r.confidence >= 0.7
+                  ? "conf-med"
+                  : "conf-low";
+            const confPct = Math.round(r.confidence * 100);
+
+            return `<tr onclick="selectBlockFromRegion(${r.id - 1})" style="cursor:pointer">
+      <td class="td-offset">${r.id}</td>
+      <td class="td-offset">0x${r.start.toString(16).padStart(10, "0").toUpperCase()}</td>
+      <td class="td-offset">0x${r.end.toString(16).padStart(10, "0").toUpperCase()}</td>
+      <td>${formatBytes(r.size)}</td>
+      <td><span class="wipe-badge ${badgeClass}">${badgeLabel}</span></td>
+      <td>${r.entropy.toFixed(3)}</td>
+      <td>
+        <div class="confidence-bar-wrap">
+          <div class="confidence-bar"><div class="confidence-fill ${confClass}" style="width:${confPct}%"></div></div>
+          <span class="confidence-val">${confPct}%</span>
+        </div>
+      </td>
+      <td>${r.blockCount.toLocaleString()}</td>
+    </tr>`;
+          })
+          .join("");
+      }
+
+      function filterRegions(filter, btn) {
+        document
+          .querySelectorAll(".filter-chip")
+          .forEach((c) => c.classList.remove("active"));
+        btn.classList.add("active");
+        activeFilter = filter;
+        applyFilters();
+      }
+
+      function searchRegions(val) {
+        applyFilters(val);
+      }
+
+      function applyFilters(searchVal) {
+        if (!scanData) return;
+        const search =
+          searchVal !== undefined
+            ? searchVal
+            : document.getElementById("regionSearch").value;
+        let data = scanData.regions;
+        if (activeFilter !== "all")
+          data = data.filter((r) => r.type === activeFilter);
+        if (search)
+          data = data.filter(
+            (r) =>
+              r.start.toString(16).includes(search.toLowerCase()) ||
+              r.type.toLowerCase().includes(search.toLowerCase()),
+          );
+        populateTable(data);
+      }
+
+      function sortTable(key) {
+        if (!scanData) return;
+        if (sortKey === key) sortDir *= -1;
+        else {
+          sortKey = key;
+          sortDir = 1;
+        }
+        const sorted = [...scanData.regions].sort((a, b) => {
+          const av = a[key],
+            bv = b[key];
+          return typeof av === "string"
+            ? av.localeCompare(bv) * sortDir
+            : (av - bv) * sortDir;
+        });
+        populateTable(sorted);
+      }
+
+      function selectBlockFromRegion(regionIdx) {
+        if (!scanData) return;
+        const r = scanData.regions[regionIdx];
+        if (!r) return;
+        const blockId = Math.floor(r.start / 4096);
+        switchTab("raw", document.querySelectorAll(".tab-btn")[2]);
+        setTimeout(() => {
+          jumpToBlock(blockId);
+        }, 100);
+      }
+
+      // ─────────────────────────────────────────
+      // RAW DATA / HEX VIEWER
+      // ─────────────────────────────────────────
+      function navigateBlock(dir) {
+        if (!scanData) return;
+        currentBlockIdx = Math.max(
+          0,
+          Math.min(scanData.totalBlocks - 1, currentBlockIdx + dir),
+        );
+        document.getElementById("blockIdInput").value = currentBlockIdx;
+        renderHexView(currentBlockIdx);
+      }
+
+      function jumpToBlock(id) {
+        if (!scanData) return;
+        currentBlockIdx = Math.max(0, Math.min(scanData.totalBlocks - 1, id));
+        document.getElementById("blockIdInput").value = currentBlockIdx;
+        renderHexView(currentBlockIdx);
+      }
+
+      function renderHexView(blockId) {
+        if (!scanData) return;
+        const block = scanData.blocks[blockId];
+        if (!block) return;
+
+        document.getElementById("hexBlockId").textContent = blockId;
+        document.getElementById("histBlockId").textContent = blockId;
+
+        const typeLabels = {
+          ZERO_WIPE: "ZERO WIPE",
+          FF_WIPE: "FF WIPE",
+          RANDOM_WIPE: "RANDOM WIPE",
+          MULTI_PASS: "MULTI-PASS",
+          NORMAL: "NORMAL",
+        };
+        const typeColors = {
+          ZERO_WIPE: "var(--blue)",
+          FF_WIPE: "var(--yellow)",
+          RANDOM_WIPE: "var(--red)",
+          MULTI_PASS: "var(--purple)",
+          NORMAL: "var(--dim)",
+        };
+        const typeEl = document.getElementById("hexBlockType");
+        typeEl.textContent = typeLabels[block.type] || block.type;
+        typeEl.style.color = typeColors[block.type] || "var(--dim)";
+
+        const entEl = document.getElementById("hexEntropyVal");
+        entEl.textContent = block.entropy.toFixed(3);
+        entEl.style.color =
+          block.entropy > 7.8
+            ? "var(--red)"
+            : block.entropy < 0.5
+              ? "var(--blue)"
+              : "var(--text-hi)";
+
+        // Simulate hex bytes based on block type
+        const rows = [];
+        for (let row = 0; row < 24; row++) {
+          const offset = blockId * 4096 + row * 16;
+          const hexAddr =
+            "0x" + offset.toString(16).padStart(10, "0").toUpperCase();
+          let hexBytes = "";
+          for (let col = 0; col < 16; col++) {
+            let byte;
+            if (block.type === "ZERO_WIPE") byte = 0x00;
+            else if (block.type === "FF_WIPE") byte = 0xff;
+            else if (block.type === "RANDOM_WIPE")
+              byte = Math.floor(Math.random() * 256);
+            else if (block.type === "MULTI_PASS")
+              byte = row % 2 === 0 ? 0x00 : 0xff;
+            else byte = Math.floor(Math.random() * 128) + 32;
+
+            const hex = byte.toString(16).padStart(2, "0").toUpperCase();
+            let cls = "h-norm";
+            if (byte === 0x00) cls = "h-zero";
+            else if (byte === 0xff) cls = "h-ff";
+            else if (block.entropy > 7.8) cls = "h-hi";
+            hexBytes += `<span class="${cls}">${hex}</span>${col < 15 ? " " : ""}`;
+          }
+          rows.push(
+            `<div class="hex-row"><span class="hex-addr">${hexAddr}</span><span class="hex-bytes">${hexBytes}</span></div>`,
+          );
+        }
+        document.getElementById("hexScroll").innerHTML = rows.join("");
+
+        renderHistogram(block);
+        document.getElementById("histOverlay").classList.add("hidden");
+      }
+
+      function renderHistogram(block) {
+        // Build simulated byte frequency
+        const freq = new Array(256).fill(0);
+        if (block.type === "ZERO_WIPE") {
+          freq[0] = 4090;
+          for (let i = 1; i < 256; i++) freq[i] = Math.floor(Math.random() * 2);
+        } else if (block.type === "FF_WIPE") {
+          freq[255] = 4088;
+          for (let i = 0; i < 255; i++) freq[i] = Math.floor(Math.random() * 2);
+        } else if (block.type === "RANDOM_WIPE") {
+          for (let i = 0; i < 256; i++)
+            freq[i] = 14 + Math.floor(Math.random() * 6);
+        } else if (block.type === "MULTI_PASS") {
+          freq[0] = 2040;
+          freq[255] = 2040;
+          for (let i = 1; i < 255; i++) freq[i] = Math.floor(Math.random() * 2);
+        } else {
+          for (let i = 32; i < 127; i++)
+            freq[i] = 15 + Math.floor(Math.random() * 25);
+          freq[10] = 80;
+          freq[32] = 120;
+        }
+
+        const colors = Array.from({ length: 256 }, (_, i) => {
+          if (i === 0) return "rgba(77,159,255,0.8)";
+          if (i === 255) return "rgba(255,204,0,0.8)";
+          if (block.entropy > 7.8) return "rgba(255,77,77,0.6)";
+          return "rgba(200,205,212,0.5)";
+        });
+
+        if (histChartInst) {
+          histChartInst.destroy();
+        }
+        const ctx = document.getElementById("histChart").getContext("2d");
+        histChartInst = new Chart(ctx, {
+          type: "bar",
+          data: {
+            labels: Array.from({ length: 256 }, (_, i) => i),
+            datasets: [
+              {
+                data: freq,
+                backgroundColor: colors,
+                borderWidth: 0,
+                barPercentage: 1.0,
+                categoryPercentage: 1.0,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: { duration: 300 },
+            scales: {
+              x: {
+                ticks: {
+                  color: "#4a5260",
+                  font: { family: "JetBrains Mono", size: 8 },
+                  maxTicksLimit: 16,
+                  callback: (v, i) =>
+                    i % 32 === 0
+                      ? "0x" +
+                        Number(v).toString(16).toUpperCase().padStart(2, "0")
+                      : "",
+                },
+                grid: { display: false },
+              },
+              y: {
+                ticks: {
+                  color: "#4a5260",
+                  font: { family: "JetBrains Mono", size: 9 },
+                },
+                grid: { color: "#1e2227", drawBorder: false },
+              },
+            },
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                backgroundColor: "#14171a",
+                borderColor: "#2a2f36",
+                borderWidth: 1,
+                titleColor: "#e8ecf0",
+                bodyColor: "#c8cdd4",
+                titleFont: { family: "JetBrains Mono", size: 11 },
+                bodyFont: { family: "JetBrains Mono", size: 11 },
+                callbacks: {
+                  title: (items) =>
+                    `Byte 0x${Number(items[0].label).toString(16).toUpperCase().padStart(2, "0")}`,
+                  label: (item) => ` Count: ${item.raw}`,
+                },
+              },
+            },
+          },
+        });
+      }
+
+      // ─────────────────────────────────────────
+      // TAB SWITCHING
+      // ─────────────────────────────────────────
+      function switchTab(name, btn) {
+        document
+          .querySelectorAll(".tab-btn")
+          .forEach((b) => b.classList.remove("active"));
+        document
+          .querySelectorAll(".tab-panel")
+          .forEach((p) => p.classList.remove("active"));
+        btn.classList.add("active");
+        document.getElementById("panel-" + name).classList.add("active");
+
+        // Re-render charts if switching back (canvas sizing)
+        if (name === "overview" && entropyChartInst) {
+          setTimeout(() => entropyChartInst.resize(), 50);
+        }
+      }
+
+      // ─────────────────────────────────────────
+      // EXPORT CSV
+      // ─────────────────────────────────────────
+      function exportCSV() {
+        if (!scanData) return;
+        const headers = [
+          "Region ID",
+          "Start Offset",
+          "End Offset",
+          "Size (bytes)",
+          "Wipe Type",
+          "Avg Entropy",
+          "Confidence",
+          "Block Count",
+        ];
+        const rows = scanData.regions.map((r) =>
+          [
+            r.id,
+            r.start,
+            r.end,
+            r.size,
+            r.type,
+            r.entropy,
+            r.confidence,
+            r.blockCount,
+          ].join(","),
+        );
+        const csv = [headers.join(","), ...rows].join("\n");
+        const blob = new Blob([csv], { type: "text/csv" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "wipetrace_report.csv";
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+
+      // ─────────────────────────────────────────
+      // UTILS
+      // ─────────────────────────────────────────
+      function formatBytes(b) {
+        if (b < 1024) return b + " B";
+        if (b < 1024 * 1024) return (b / 1024).toFixed(1) + " KB";
+        if (b < 1024 * 1024 * 1024)
+          return (b / (1024 * 1024)).toFixed(2) + " MB";
+        return (b / (1024 * 1024 * 1024)).toFixed(2) + " GB";
+      }
+
+      // Populate nav bar from URL params passed by upload_module.html
+      (function populateNav() {
+        const p = new URLSearchParams(window.location.search);
+        if (p.get("session"))
+          document.getElementById("navSession").textContent = p.get("session");
+        if (p.get("file"))
+          document.getElementById("navFilename").textContent = p.get("file");
+        if (p.get("size") || p.get("sha256")) {
+          const size = p.get("size") || "—";
+          const hash = p.get("sha256")
+            ? p.get("sha256").substring(0, 16) + "…"
+            : "—";
+          const meta = document.getElementById("navFilemeta");
+          if (meta) meta.textContent = `${size} · SHA-256: ${hash}`;
+        }
+      })();
+    </script>
+  </body>
+</html>
+"en">
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
