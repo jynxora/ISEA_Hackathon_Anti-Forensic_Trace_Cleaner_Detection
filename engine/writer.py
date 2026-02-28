@@ -1,26 +1,26 @@
 """
 writer.py
 ─────────
-Serialises the full scan result to a JSON file:
+Serialises the full scan result to:
 
     uploads/analysis_<SESSION_ID>.json
 
-This file is the single source of truth consumed by the frontend
-analysis_dashboard.html. The schema matches exactly what the dashboard
-expects — blocks[], regions[], stats{}.
+Schema is the single source of truth consumed by analysis_dashboard.html.
+Updated to handle new wipe types (LIKELY_ZERO_WIPE, LIKELY_FF_WIPE,
+LOW_ENTROPY_SUSPECT) and the wipe_density field added to ScanStats.
 
 Usage:
     from engine.writer import write_results
 
     path = write_results(
-        session_id  = "SID-A3F8C21E",
-        filename    = "suspect.dd",
-        sha256      = "e3b0c44...",
-        size_bytes  = 4294967296,
-        blocks      = block_results,
-        regions     = regions,
-        stats       = scan_stats,
-        output_dir  = Path("uploads"),
+        session_id = "SID-A3F8C21E",
+        filename   = "suspect.dd",
+        sha256     = "e3b0c44...",
+        size_bytes = 4294967296,
+        blocks     = block_results,
+        regions    = regions,
+        stats      = scan_stats,
+        output_dir = Path("uploads"),
     )
 """
 
@@ -45,13 +45,10 @@ def write_results(
     output_dir: Path = Path("uploads"),
 ) -> Path:
     """
-    Write analysis results to JSON.
-
-    Returns the Path of the written file.
+    Write analysis results to JSON and return the output path.
     """
-    output_dir = Path(output_dir)
+    output_dir  = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
-
     output_path = output_dir / f"analysis_{session_id}.json"
 
     payload = {
@@ -59,19 +56,17 @@ def write_results(
         "filename":    filename,
         "sha256":      sha256,
         "size_bytes":  size_bytes,
-        "size_human":  _format_bytes(size_bytes),
+        "size_human":  _fmt(size_bytes),
         "scanned_at":  datetime.now(timezone.utc).isoformat(),
 
-        # ── Summary stats (matches dashboard stat cards) ──────────────────────
+        # Summary stats (feeds dashboard stat cards + intent score)
         "stats": stats.to_dict(),
 
-        # ── Regions (matches dashboard regions table) ─────────────────────────
+        # Regions (feeds dashboard regions table + pie chart)
         "regions": [r.to_dict() for r in regions],
 
-        # ── Per-block data (matches dashboard entropy chart + hex viewer) ──────
-        # NOTE: for large images this list can be millions of entries.
-        # The dashboard samples every N blocks for the chart — full data
-        # is included here so the frontend can do its own sampling.
+        # Per-block data (feeds entropy chart + hex viewer)
+        # Full block list — dashboard samples for chart rendering.
         "blocks": [
             {
                 "id":      b.block_id,
@@ -88,7 +83,7 @@ def write_results(
     return output_path
 
 
-def _format_bytes(b: int) -> str:
+def _fmt(b: int) -> str:
     for unit in ("B", "KB", "MB", "GB", "TB"):
         if b < 1024:
             return f"{b:.2f} {unit}"
