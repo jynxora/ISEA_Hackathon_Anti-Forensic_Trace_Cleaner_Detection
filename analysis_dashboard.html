@@ -101,6 +101,9 @@
       }
 
       .nav-logo {
+        cursor: pointer;
+        text-decoration: none;
+        color: inherit;
         display: flex;
         align-items: center;
         gap: 8px;
@@ -784,8 +787,8 @@
       }
 
       .scan-anim {
-        width: 200px;
-        height: 3px;
+        width: 260px;
+        height: 4px;
         background: var(--border);
         border-radius: 2px;
         overflow: hidden;
@@ -796,22 +799,17 @@
       }
       .scan-anim-fill {
         height: 100%;
-        background: linear-gradient(
-          90deg,
-          transparent,
-          var(--accent),
-          transparent
-        );
-        animation: scanMove 1.4s ease-in-out infinite;
-        width: 60%;
+        background: var(--accent);
+        width: 0%;
+        transition: width 0.4s ease;
+        border-radius: 2px;
       }
-      @keyframes scanMove {
-        0% {
-          transform: translateX(-100%);
-        }
-        100% {
-          transform: translateX(350%);
-        }
+      .scan-progress-label {
+        font-size: 10px;
+        color: var(--accent);
+        font-family: var(--mono);
+        letter-spacing: 0.05em;
+        margin-top: -4px;
       }
 
       /* ────────────────────────────────────────
@@ -1260,7 +1258,7 @@
       <!-- Nav -->
       <nav>
         <div class="nav-left">
-          <div class="nav-logo">
+          <a class="nav-logo" href="upload_module.html" title="Back to Upload">
             <div class="nav-logo-mark">
               <svg
                 viewBox="0 0 16 16"
@@ -1275,7 +1273,7 @@
               </svg>
             </div>
             WipeTrace
-          </div>
+          </a>
           <div class="nav-divider"></div>
           <div class="nav-session">
             SESSION <strong id="navSession">SID-A3F8C21E</strong>
@@ -1559,12 +1557,15 @@
                       <div class="entropy-legend-item">
                         <span
                           class="elc"
-                          style="background: rgba(77, 159, 255, 0.6)"
+                          style="background: rgba(255, 77, 77, 0.85)"
                         ></span>
                         Normal
                       </div>
                       <div class="entropy-legend-item">
-                        <span class="elc" style="background: var(--red)"></span>
+                        <span
+                          class="elc"
+                          style="background: rgba(77, 159, 255, 0.6)"
+                        ></span>
                         Flagged
                       </div>
                       <div class="entropy-legend-item">
@@ -1598,8 +1599,12 @@
                         No scan data yet — press Run Scan to begin
                       </p>
                       <div class="scan-anim" id="scanAnim">
-                        <div class="scan-anim-fill"></div>
+                        <div class="scan-anim-fill" id="scanAnimFill"></div>
                       </div>
+                      <div
+                        class="scan-progress-label"
+                        id="scanProgressLabel"
+                      ></div>
                     </div>
                   </div>
                 </div>
@@ -1805,7 +1810,7 @@
       <!-- Footer -->
       <footer>
         <div>
-          WipeTrace DFIR Engine · Block Size: 4096 B · Threshold H &gt; 7.8
+          WipeTrace DFIR Engine · Block Size: 512 B · Threshold H &gt; 7.8
         </div>
         <div id="footerScanTime">Last scan: never</div>
       </footer>
@@ -1856,6 +1861,7 @@
       let entropyChartInst = null;
       let histChartInst = null;
       let pollTimer = null;
+      let _resultsFetched = false;
 
       // ─────────────────────────────────────────
       // SCAN — real API flow
@@ -1876,12 +1882,17 @@
         const overlayMsg = document.getElementById("overlayMsg");
 
         btn.classList.add("scanning");
+        _resultsFetched = false;
         btn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg> Scanning…`;
         btn.disabled = true;
         status.className = "scan-status running";
         statusText.textContent = "Initialising scan…";
         overlayMsg.textContent = "Starting scan engine…";
         scanAnim.classList.add("running");
+        const _fill = document.getElementById("scanAnimFill");
+        const _label = document.getElementById("scanProgressLabel");
+        if (_fill) _fill.style.width = "0%";
+        if (_label) _label.textContent = "0%";
 
         // ── Step 1: POST /scan ──────────────────────────────────────────────
         try {
@@ -1911,12 +1922,19 @@
             const pollData = await pollRes.json();
             const pct = pollData.progress || 0;
             statusText.textContent = `Scanning… ${pct}% complete`;
-            overlayMsg.textContent = `Analysing blocks — ${pct}%`;
+            overlayMsg.textContent = `Analysing blocks…`;
+            const fill = document.getElementById("scanAnimFill");
+            const label = document.getElementById("scanProgressLabel");
+            if (fill) fill.style.width = pct + "%";
+            if (label) label.textContent = pct + "%";
 
             if (pollData.status === "done") {
               clearInterval(pollTimer);
               pollTimer = null;
-              _fetchResults();
+              if (!_resultsFetched) {
+                _resultsFetched = true;
+                _fetchResults();
+              }
             } else if (pollData.status === "error") {
               clearInterval(pollTimer);
               pollTimer = null;
@@ -1942,6 +1960,7 @@
           }
           const json = await res.json();
           scanData = adaptApiResponse(json);
+          console.log("RESULTS LOADED ONCE");
           finalizeScan();
         } catch (e) {
           _scanError(`Failed to load results: ${e.message}`);
@@ -2213,7 +2232,7 @@ ${
         const labels = sampled.map((b) => b.id);
         const entropies = sampled.map((b) => b.entropy);
         const colors = sampled.map((b) =>
-          b.type === "NORMAL" ? "rgba(77,159,255,0.5)" : "rgba(255,77,77,0.85)",
+          b.type === "NORMAL" ? "rgba(77,159,255,0.35)" : "rgba(255,77,77,0.9)",
         );
 
         if (entropyChartInst) {
@@ -2423,7 +2442,7 @@ ${
         if (!scanData) return;
         const r = scanData.regions[regionIdx];
         if (!r) return;
-        const blockId = Math.floor(r.start / 4096);
+        const blockId = Math.floor(r.start / 512);
         switchTab("raw", document.querySelectorAll(".tab-btn")[2]);
         setTimeout(() => {
           jumpToBlock(blockId);
@@ -2488,7 +2507,7 @@ ${
         // Simulate hex bytes based on block type
         const rows = [];
         for (let row = 0; row < 24; row++) {
-          const offset = blockId * 4096 + row * 16;
+          const offset = blockId * 512 + row * 16;
           const hexAddr =
             "0x" + offset.toString(16).padStart(10, "0").toUpperCase();
           let hexBytes = "";
