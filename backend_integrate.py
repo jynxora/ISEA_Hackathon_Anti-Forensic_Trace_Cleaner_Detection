@@ -85,21 +85,6 @@ async def upload_image(file: UploadFile = File(...)):
     except Exception as e:
         save_path.unlink(missing_ok=True)
         raise HTTPException(status_code=500, detail=str(e))
-    # ── FORMAT VALIDATION ─────────────────────────────────────────────────────
-    # Must come BEFORE hash_file() — reject unsupported formats early.
-    E01_MAGIC = b"EVF\x09\x0d\x0a\xff\x00"
-    with open(save_path, "rb") as f:
-        magic = f.read(8)
-
-    if magic[:3] == b"EVF":
-        save_path.unlink(missing_ok=True)
-        raise HTTPException(
-            status_code=415,
-            detail=(
-                "E01/EnCase format is not directly supported. "
-                "Please convert to raw first: ewfexport -t raw suspect.E01"
-            )
-        )
 
     # ── Hash via hashing.py ───────────────────────────────────────────────────
     try:
