@@ -57,16 +57,6 @@ class BlockReader:
             raise FileNotFoundError(f"Image not found: {self.path}")
 
         self.image_size   = self.path.stat().st_size
-                # Add to BlockReader.__init__, after self.image_size = ...
-        E01_MAGIC = b"EVF\x09\x0d\x0a\xff\x00"
-        with open(self.path, "rb") as f:
-            header = f.read(8)
-        if header[:3] == b"EVF":
-            raise ValueError(
-                f"E01/EnCase format detected in '{self.path.name}'. "
-                "BlockReader requires a flat raw image (.dd/.img/.raw). "
-                "Convert with: ewfexport -t raw suspect.E01"
-            )
         self.total_blocks = (self.image_size + block_size - 1) // block_size
 
     def __iter__(self) -> Iterator[Block]:
