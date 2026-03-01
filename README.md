@@ -262,6 +262,60 @@ That’s it.
 
 ---
 
+## Screenshots
+
+### 1️ Upload Interface
+
+![Upload Interface](screenshots/uploadModule.png)
+![Upload Interface](screenshots/fileUploading.png)
+
+Upload disk image (.dd, .img, .raw, .bin, .e01) and initiate hashing + indexing pipeline.
+
+---
+
+### 2️ Scan in Progress
+
+![Scan Running](screenshots/fileScanning.png)
+
+Real-time block-level scanning with entropy computation and wipe classification.
+
+---
+
+### 3️ Overview Dashboard
+
+![Scan Overview](screenshots/scanAnalysis.png)
+![Scan Overview](screenshots/scanAnalysis2.png)
+![Scan Overview](screenshots/scanAnalysis3.png)
+
+High-level metrics:
+- Total blocks scanned
+- Suspicious blocks
+- Regions detected
+- Average entropy
+- Intent score
+
+---
+
+### 4️ Region-Level Analysis
+
+![Region Analysis](screenshots/regionAnalysis.png)
+
+Contiguous wipe regions with:
+- Start offset
+- End offset
+- Block count
+- Wipe type
+- Confidence score
+
+---
+
+### 5️ Raw Block / Hex Analysis
+
+![Hex Analysis](screenshots/hexAnalysis.png)
+
+Block-level entropy view with byte frequency visualization and multi-pass pattern detection.
+
+---
 ## Hackathon Context
 
 Built in 24 hours during the ISEA Anti-Forensic Detection Tool Building Hackathon.
