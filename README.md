@@ -32,19 +32,19 @@ This project focuses on:
 project/
 ├── upload_module.html
 ├── analysis_dashboard.html
-├── hashing.py                  ← done
-├── backend_main.py             ← done (upload + hash endpoints)
+├── hashing.py
+├── backend_main.py
 ├── scanner.py
 │
 ├── engine/
-│   ├── reader.py               ← streams raw image in 4KB blocks
-│   ├── classifier.py           ← per-block: ZERO / FF / RANDOM / MULTI / NORMAL
-│   ├── aggregator.py           ← merges consecutive flagged blocks → regions
-│   ├── scorer.py               ← intent score + false-positive filter
-│   └── writer.py               ← dumps results to analysis_<SID>.json
+│ ├── reader.py
+│ ├── classifier.py
+│ ├── aggregator.py
+│ ├── scorer.py
+│ └── writer.py
 │
-└── uploads/                    ← disk images land here
-    └── analysis_<SID>.json     ← output consumed by dashboard
+└── uploads/
+└── analysis_<SID>.json
 
 ---
 
