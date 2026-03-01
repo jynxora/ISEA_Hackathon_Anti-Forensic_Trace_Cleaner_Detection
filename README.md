@@ -194,6 +194,74 @@ This is post-acquisition forensic analysis.
 
 ---
 
+## Dependencies
+
+This project is built using Python 3.10+.
+
+Required Packages
+
+Install manually using:
+
+```
+pip install fastapi uvicorn python-multipart
+```
+
+### Core Dependencies Explained
+
+FastAPI – Backend API framework
+
+Uvicorn – ASGI server used to run the backend
+
+python-multipart – Handles file uploads
+
+hashlib (built-in) – File hashing
+
+os / json (built-in) – File system + output handling
+
+No external forensic or entropy libraries were used.
+All detection logic is custom-built.
+
+---
+
+## How to Run the Tool (Local Setup)
+
+### Step 1 — Start Backend Server
+
+From the project root directory, run:
+```
+uvicorn backend_integrate:app --host 0.0.0.0 --port 8000
+```
+The server will start locally on:
+```
+http://localhost:8000
+```
+### Step 2 — Open the Upload Interface
+
+Open the file:
+```
+upload_module.html
+```
+in your browser.
+
+From there:
+
+1. Upload a disk image
+
+2. The backend hashes the file
+
+3. The scanning engine executes
+
+4. Results are written to:
+```
+uploads/analysis_<SID>.json
+```
+
+5. Dashboard consumes and visualizes output
+
+That’s it.
+
+---
+
 ## Hackathon Context
 
 Built in 24 hours during the ISEA Anti-Forensic Detection Tool Building Hackathon.
