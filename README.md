@@ -29,6 +29,7 @@ This project focuses on:
 
 ## System Architecture
 
+```
 project/
 ├── upload_module.html
 ├── analysis_dashboard.html
@@ -45,7 +46,7 @@ project/
 │
 └── uploads/
 └── analysis_<SID>.json
-
+```
 ---
 
 ## Architecture Overview
