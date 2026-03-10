@@ -10,1247 +10,1575 @@
     />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
     <style>
-      :root {
-        --bg: #0a0b0d;
-        --surface: #101214;
-        --panel: #14171a;
-        --panel2: #181c1f;
-        --border: #1e2227;
-        --border-hi: #2a2f36;
-        --accent: #e8ff47;
-        --accent-lo: rgba(232, 255, 71, 0.07);
-        --accent-md: rgba(232, 255, 71, 0.15);
-        --red: #ff4d4d;
-        --red-lo: rgba(255, 77, 77, 0.08);
-        --red-md: rgba(255, 77, 77, 0.18);
-        --teal: #00c8a0;
-        --teal-lo: rgba(0, 200, 160, 0.08);
-        --blue: #4d9fff;
-        --blue-lo: rgba(77, 159, 255, 0.08);
-        --yellow: #ffcc00;
-        --yellow-lo: rgba(255, 204, 0, 0.08);
-        --purple: #c084fc;
-        --purple-lo: rgba(192, 132, 252, 0.08);
-        --muted: #3a4048;
-        --dim: #5c636e;
-        --text: #c8cdd4;
-        --text-hi: #e8ecf0;
-        --text-lo: #4a5260;
-        --mono: "JetBrains Mono", monospace;
-        --sans: "Syne", sans-serif;
-      }
-
-      *,
-      *::before,
-      *::after {
-        box-sizing: border-box;
-        margin: 0;
-        padding: 0;
-      }
-
-      html,
-      body {
-        height: 100%;
-        background: var(--bg);
-        color: var(--text);
-        font-family: var(--mono);
-        font-size: 13px;
-        line-height: 1.6;
-        overflow: hidden;
-      }
-
-      body::before {
-        content: "";
-        position: fixed;
-        inset: 0;
-        background: repeating-linear-gradient(
-          0deg,
-          transparent,
-          transparent 3px,
-          rgba(0, 0, 0, 0.04) 3px,
-          rgba(0, 0, 0, 0.04) 4px
-        );
-        pointer-events: none;
-        z-index: 9999;
-      }
-
-      .shell {
-        height: 100vh;
-        display: flex;
-        flex-direction: column;
-        overflow: hidden;
-      }
-
-      /* ── Nav ── */
-      nav {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 0 32px;
-        height: 52px;
-        border-bottom: 1px solid var(--border);
-        background: var(--surface);
-        flex-shrink: 0;
-        z-index: 100;
-      }
-
-      .nav-left {
-        display: flex;
-        align-items: center;
-        gap: 16px;
-      }
-
-      .nav-logo {
-        cursor: pointer;
-        text-decoration: none;
-        color: inherit;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        font-family: var(--sans);
-        font-weight: 800;
-        font-size: 15px;
-        letter-spacing: -0.02em;
-        color: var(--text-hi);
-      }
-
-      .nav-logo-mark {
-        width: 26px;
-        height: 26px;
-        background: var(--accent);
-        border-radius: 4px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
-      .nav-logo-mark svg {
-        width: 14px;
-        height: 14px;
-      }
-
-      .nav-divider {
-        width: 1px;
-        height: 20px;
-        background: var(--border-hi);
-      }
-
-      .nav-session {
-        font-size: 10px;
-        color: var(--dim);
-        letter-spacing: 0.06em;
-        display: flex;
-        align-items: center;
-        gap: 6px;
-      }
-      .nav-session strong {
-        color: var(--text);
-      }
-
-      .nav-right {
-        display: flex;
-        align-items: center;
-        gap: 20px;
-      }
-
-      .nav-file-info {
-        text-align: right;
-      }
-      .nav-file-info .fname {
-        font-size: 11px;
-        color: var(--text);
-        display: block;
-        font-weight: 600;
-      }
-      .nav-file-info .fmeta {
-        font-size: 10px;
-        color: var(--dim);
-      }
-
-      /* ── Step Bar ── */
-      .step-bar {
-        display: flex;
-        align-items: center;
-        padding: 0 32px;
-        height: 40px;
-        background: var(--panel);
-        border-bottom: 1px solid var(--border);
-        flex-shrink: 0;
-        gap: 0;
-      }
-      .step-item {
-        display: flex;
-        align-items: center;
-        gap: 7px;
-        font-size: 10px;
-        letter-spacing: 0.06em;
-        text-transform: uppercase;
-        color: var(--text-lo);
-        padding-right: 14px;
-      }
-      .step-item.done {
-        color: var(--teal);
-      }
-      .step-item.active {
-        color: var(--accent);
-      }
-      .step-num {
-        width: 17px;
-        height: 17px;
-        border-radius: 3px;
-        border: 1px solid currentColor;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 9px;
-        font-weight: 600;
-      }
-      .step-item.active .step-num {
-        background: var(--accent);
-        color: #000;
-        border-color: var(--accent);
-      }
-      .step-item.done .step-num {
-        background: var(--teal);
-        color: #000;
-        border-color: var(--teal);
-      }
-      .step-arrow {
-        color: var(--border-hi);
-        margin: 0 6px;
-        font-size: 11px;
-      }
-
-      /* ── Toolbar ── */
-      .toolbar {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 0 32px;
-        height: 52px;
-        border-bottom: 1px solid var(--border);
-        background: var(--panel2);
-        flex-shrink: 0;
-      }
-
-      .toolbar-left {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-      }
-      .toolbar-right {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-      }
-
-      /* Tabs */
-      .tab-group {
-        display: flex;
-        gap: 2px;
-      }
-
-      .tab-btn {
-        padding: 6px 16px;
-        border-radius: 4px;
-        border: 1px solid transparent;
-        background: none;
-        color: var(--dim);
-        font-family: var(--mono);
-        font-size: 11px;
-        letter-spacing: 0.05em;
-        text-transform: uppercase;
-        cursor: pointer;
-        transition: all 0.15s;
-      }
-      .tab-btn:hover {
-        color: var(--text);
-        background: var(--surface);
-      }
-      .tab-btn.active {
-        background: var(--accent-lo);
-        border-color: rgba(232, 255, 71, 0.25);
-        color: var(--accent);
-      }
-
-      .toolbar-divider {
-        width: 1px;
-        height: 24px;
-        background: var(--border-hi);
-        margin: 0 4px;
-      }
-
-      /* Scan button */
-      .btn-scan {
-        display: flex;
-        align-items: center;
-        gap: 7px;
-        padding: 8px 20px;
-        background: var(--accent);
-        color: #000;
-        border: none;
-        border-radius: 4px;
-        font-family: var(--mono);
-        font-size: 11px;
-        font-weight: 700;
-        letter-spacing: 0.07em;
-        text-transform: uppercase;
-        cursor: pointer;
-        transition: all 0.2s;
-      }
-      .btn-scan:hover {
-        background: #f5ff6e;
-        box-shadow: 0 0 16px rgba(232, 255, 71, 0.3);
-      }
-      .btn-scan:disabled {
-        opacity: 0.4;
-        cursor: not-allowed;
-        box-shadow: none;
-      }
-      .btn-scan.scanning {
-        background: var(--panel);
-        color: var(--accent);
-        border: 1px solid var(--accent);
-      }
-
-      .btn-export {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        padding: 7px 14px;
-        background: none;
-        border: 1px solid var(--border-hi);
-        border-radius: 4px;
-        color: var(--dim);
-        font-family: var(--mono);
-        font-size: 11px;
-        letter-spacing: 0.04em;
-        cursor: pointer;
-        transition: all 0.2s;
-      }
-      .btn-export:hover {
-        border-color: var(--text-lo);
-        color: var(--text);
-      }
-      .btn-export:disabled {
-        opacity: 0.35;
-        cursor: not-allowed;
-      }
-
-      /* Scan status badge */
-      .scan-status {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        font-size: 10px;
-        letter-spacing: 0.06em;
-        text-transform: uppercase;
-      }
-      .scan-status .dot {
-        width: 6px;
-        height: 6px;
-        border-radius: 50%;
-        background: var(--muted);
-      }
-      .scan-status.idle .dot {
-        background: var(--muted);
-      }
-      .scan-status.running .dot {
-        background: var(--accent);
-        box-shadow: 0 0 6px var(--accent);
-        animation: pulse 1s ease-in-out infinite;
-      }
-      .scan-status.done .dot {
-        background: var(--teal);
-        box-shadow: 0 0 6px var(--teal);
-      }
-
-      @keyframes pulse {
-        0%,
-        100% {
-          opacity: 1;
+        :root {
+          --bg: #0a0b0d;
+          --surface: #101214;
+          --panel: #14171a;
+          --panel2: #181c1f;
+          --border: #1e2227;
+          --border-hi: #2a2f36;
+          --accent: #e8ff47;
+          --accent-lo: rgba(232, 255, 71, 0.07);
+          --accent-md: rgba(232, 255, 71, 0.15);
+          --red: #ff4d4d;
+          --red-lo: rgba(255, 77, 77, 0.08);
+          --red-md: rgba(255, 77, 77, 0.18);
+          --teal: #00c8a0;
+          --teal-lo: rgba(0, 200, 160, 0.08);
+          --blue: #4d9fff;
+          --blue-lo: rgba(77, 159, 255, 0.08);
+          --yellow: #ffcc00;
+          --yellow-lo: rgba(255, 204, 0, 0.08);
+          --purple: #c084fc;
+          --purple-lo: rgba(192, 132, 252, 0.08);
+          --muted: #3a4048;
+          --dim: #5c636e;
+          --text: #c8cdd4;
+          --text-hi: #e8ecf0;
+          --text-lo: #4a5260;
+          --mono: "JetBrains Mono", monospace;
+          --sans: "Syne", sans-serif;
         }
-        50% {
-          opacity: 0.3;
+
+        /* ── Light mode ── */
+        [data-theme="light"] {
+          --bg:        #eef0f4;
+          --surface:   #ffffff;
+          --panel:     #ffffff;
+          --panel2:    #f3f5f8;
+          --border:    #d4d8e0;
+          --border-hi: #a8b0be;
+          --accent:    #3b5bdb;
+          --accent-lo: rgba(59, 91, 219, 0.09);
+          --accent-md: rgba(59, 91, 219, 0.18);
+          --red:       #c0392b;
+          --red-lo:    rgba(192, 57, 43, 0.09);
+          --red-md:    rgba(192, 57, 43, 0.18);
+          --teal:      #007060;
+          --teal-lo:   rgba(0, 112, 96, 0.09);
+          --blue:      #1565c0;
+          --blue-lo:   rgba(21, 101, 192, 0.09);
+          --yellow:    #d47b00;
+          --yellow-lo: rgba(212, 123, 0, 0.09);
+          --purple:    #6a1b9a;
+          --purple-lo: rgba(106, 27, 154, 0.09);
+          --muted:     #b0b8c8;
+          --dim:       #3d4a5c;   /* was #8a929e — now clearly legible */
+          --text:      #1a2332;   /* was #374151 — near-black for body text */
+          --text-hi:   #0a0f1a;   /* headings, values */
+          --text-lo:   #5a6472;   /* was #9ca3af — still muted but readable */
         }
-      }
 
-      /* ── Body ── */
-      .body {
-        flex: 1;
-        min-height: 0;
-        overflow: hidden;
-        display: flex;
-        flex-direction: column;
-      }
+        *,
+        *::before,
+        *::after {
+          box-sizing: border-box;
+          margin: 0;
+          padding: 0;
+        }
 
-      /* ── Tab Panels ── */
-      .tab-panels {
-        flex: 1;
-        min-height: 0;
-        overflow: hidden;
-      }
+        html,
+        body {
+          height: 100%;
+          background: var(--bg);
+          color: var(--text);
+          font-family: var(--mono);
+          font-size: 13px;
+          line-height: 1.6;
+          overflow: hidden;
+        }
 
-      .tab-panel {
-        display: none;
-        height: 100%;
-      }
-      .tab-panel.active {
-        display: flex;
-        flex-direction: column;
-      }
+        body::before {
+          content: "";
+          position: fixed;
+          inset: 0;
+          background: repeating-linear-gradient(
+            0deg,
+            transparent,
+            transparent 3px,
+            rgba(0, 0, 0, 0.04) 3px,
+            rgba(0, 0, 0, 0.04) 4px
+          );
+          pointer-events: none;
+          z-index: 9999;
+        }
 
-      /* ────────────────────────────────────────
-       TAB 1 — OVERVIEW
-    ──────────────────────────────────────── */
-      .overview-layout {
-        flex: 1;
-        min-height: 0;
-        overflow: hidden;
-        display: grid;
-        grid-template-rows: auto 1fr;
-      }
+        .shell {
+          height: 100vh;
+          display: flex;
+          flex-direction: column;
+          overflow: hidden;
+        }
 
-      /* Stat cards row */
-      .stat-row {
-        display: grid;
-        grid-template-columns: repeat(5, 1fr);
-        border-bottom: 1px solid var(--border);
-        flex-shrink: 0;
-      }
+        /* ── Nav ── */
+        nav {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 0 40px;
+          height: 56px;
+          border-bottom: 1px solid var(--border);
+          background: var(--surface);
+          flex-shrink: 0;
+          z-index: 100;
+        }
 
-      .stat-card {
-        padding: 16px 20px;
-        border-right: 1px solid var(--border);
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-        position: relative;
-        overflow: hidden;
-        transition: background 0.2s;
-      }
-      .stat-card:last-child {
-        border-right: none;
-      }
-      .stat-card:hover {
-        background: var(--panel);
-      }
+        .nav-left {
+          display: flex;
+          align-items: center;
+          gap: 16px;
+        }
 
-      .stat-label {
-        font-size: 9px;
-        letter-spacing: 0.1em;
-        text-transform: uppercase;
-        color: var(--dim);
-      }
-      .stat-value {
-        font-family: var(--sans);
-        font-size: 26px;
-        font-weight: 800;
-        color: var(--text-hi);
-        letter-spacing: -0.02em;
-        line-height: 1;
-      }
-      .stat-sub {
-        font-size: 10px;
-        color: var(--text-lo);
-      }
+        .nav-logo {
+          cursor: pointer;
+          text-decoration: none;
+          color: inherit;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          font-family: var(--sans);
+          font-weight: 800;
+          font-size: 16px;
+          letter-spacing: -0.02em;
+          color: var(--text-hi);
+        }
 
-      .stat-card.highlight-red .stat-value {
-        color: var(--red);
-      }
-      .stat-card.highlight-yellow .stat-value {
-        color: var(--yellow);
-      }
-      .stat-card.highlight-teal .stat-value {
-        color: var(--teal);
-      }
-      .stat-card.highlight-accent .stat-value {
-        color: var(--accent);
-      }
+        .nav-logo-mark {
+          width: 28px;
+          height: 28px;
+          background: var(--accent);
+          border-radius: 4px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        .nav-logo-mark svg {
+          width: 16px;
+          height: 16px;
+        }
 
-      .stat-bar {
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        height: 2px;
-        background: var(--accent);
-        transition: width 1s ease;
-      }
-      .stat-bar.red {
-        background: var(--red);
-      }
-      .stat-bar.teal {
-        background: var(--teal);
-      }
+        .nav-divider {
+          width: 1px;
+          height: 20px;
+          background: var(--border-hi);
+        }
 
-      /* Charts area */
-      .charts-area {
-        display: grid;
-        grid-template-columns: 380px 1fr;
-        min-height: 0;
-        overflow: hidden;
-      }
+        .nav-session {
+          font-size: 10px;
+          color: var(--dim);
+          letter-spacing: 0.06em;
+          display: flex;
+          align-items: center;
+          gap: 6px;
+        }
+        .nav-session strong {
+          color: var(--text);
+        }
 
-      /* Left — pie + intent */
-      .charts-left {
-        border-right: 1px solid var(--border);
-        display: flex;
-        flex-direction: column;
-        overflow-y: auto;
-      }
+        .nav-right {
+          display: flex;
+          align-items: center;
+          gap: 20px;
+        }
 
-      .chart-block {
-        padding: 20px 24px;
-        border-bottom: 1px solid var(--border);
-      }
+        .nav-version {
+          font-size: 11px;
+          color: var(--text-lo);
+          letter-spacing: 0.08em;
+        }
 
-      .chart-block-title {
-        font-size: 10px;
-        letter-spacing: 0.1em;
-        text-transform: uppercase;
-        color: var(--dim);
-        margin-bottom: 16px;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-      }
-      .chart-block-title::after {
-        content: "";
-        flex: 1;
-        height: 1px;
-        background: var(--border);
-      }
+        .nav-file-info {
+          text-align: right;
+        }
+        .nav-file-info .fname {
+          font-size: 11px;
+          color: var(--text);
+          display: block;
+          font-weight: 600;
+        }
+        .nav-file-info .fmeta {
+          font-size: 10px;
+          color: var(--dim);
+        }
 
-      .pie-wrap {
-        position: relative;
-        width: 200px;
-        height: 200px;
-        margin: 0 auto 16px;
-      }
+        /* ── Step Bar ── */
+        .step-bar {
+          display: flex;
+          align-items: center;
+          padding: 0 40px;
+          height: 44px;
+          background: var(--panel);
+          border-bottom: 1px solid var(--border);
+          flex-shrink: 0;
+          gap: 0;
+        }
+        .step-item {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          font-size: 11px;
+          letter-spacing: 0.06em;
+          text-transform: uppercase;
+          color: var(--text-lo);
+          padding-right: 16px;
+        }
+        .step-item.done {
+          color: var(--teal);
+        }
+        .step-item.active {
+          color: var(--accent);
+        }
+        .step-num {
+          width: 18px;
+          height: 18px;
+          border-radius: 3px;
+          border: 1px solid currentColor;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 10px;
+          font-weight: 600;
+          flex-shrink: 0;
+        }
+        .step-item.active .step-num {
+          background: var(--accent);
+          color: #000;
+          border-color: var(--accent);
+        }
+        .step-item.done .step-num {
+          background: var(--teal);
+          color: #000;
+          border-color: var(--teal);
+        }
+        .step-arrow {
+          color: var(--border-hi);
+          margin: 0 8px;
+          font-size: 12px;
+        }
 
-      .pie-center {
-        position: absolute;
-        inset: 0;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        pointer-events: none;
-        transition: opacity 0.15s ease;
-      }
-      .pie-center-val {
-        font-family: var(--sans);
-        font-size: 28px;
-        font-weight: 800;
-        color: var(--text-hi);
-        line-height: 1;
-      }
-      .pie-center-label {
-        font-size: 9px;
-        color: var(--dim);
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-      }
+        /* ── Toolbar ── */
+        .toolbar {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 0 32px;
+          height: 52px;
+          border-bottom: 1px solid var(--border);
+          background: var(--panel2);
+          flex-shrink: 0;
+        }
 
-      .legend-list {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-      }
+        .toolbar-left {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+        }
+        .toolbar-right {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          position: relative;
+        }
 
-      .legend-item {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        padding: 8px 10px;
-        background: var(--surface);
-        border: 1px solid var(--border);
-        border-radius: 4px;
-        transition: border-color 0.2s;
-      }
-      .legend-item:hover {
-        border-color: var(--border-hi);
-      }
+        .export-menu-item {
+          display: block;
+          width: 100%;
+          text-align: left;
+          padding: 8px 16px;
+          background: none;
+          border: none;
+          color: var(--text);
+          font-family: var(--mono);
+          font-size: 11px;
+          cursor: pointer;
+          letter-spacing: 0.04em;
+          transition: background 0.12s;
+        }
+        .export-menu-item:hover {
+          background: var(--panel2);
+          color: var(--text-hi);
+        }
 
-      .legend-dot {
-        width: 10px;
-        height: 10px;
-        border-radius: 2px;
-        flex-shrink: 0;
-      }
-      .legend-name {
-        flex: 1;
-        font-size: 11px;
-        color: var(--text);
-      }
-      .legend-count {
-        font-size: 11px;
-        font-weight: 600;
-      }
-      .legend-pct {
-        font-size: 10px;
-        color: var(--dim);
-        margin-left: 4px;
-      }
+        /* Tabs */
+        .tab-group {
+          display: flex;
+          gap: 2px;
+        }
 
-      /* Intent score */
-      .intent-block {
-        padding: 20px 24px;
-      }
+        .tab-btn {
+          padding: 6px 16px;
+          border-radius: 4px;
+          border: 1px solid transparent;
+          background: none;
+          color: var(--dim);
+          font-family: var(--mono);
+          font-size: 11px;
+          letter-spacing: 0.05em;
+          text-transform: uppercase;
+          cursor: pointer;
+          transition: all 0.15s;
+        }
+        .tab-btn:hover {
+          color: var(--text);
+          background: var(--surface);
+        }
+        .tab-btn.active {
+          background: var(--accent-lo);
+          border-color: rgba(232, 255, 71, 0.25);
+          color: var(--accent);
+        }
 
-      .intent-score-wrap {
-        display: flex;
-        align-items: center;
-        gap: 20px;
-        margin-bottom: 16px;
-      }
+        .toolbar-divider {
+          width: 1px;
+          height: 24px;
+          background: var(--border-hi);
+          margin: 0 4px;
+        }
 
-      .intent-ring {
-        position: relative;
-        width: 80px;
-        height: 80px;
-        flex-shrink: 0;
-      }
-      .intent-ring svg {
-        width: 80px;
-        height: 80px;
-        transform: rotate(-90deg);
-      }
-      .intent-ring-bg {
-        fill: none;
-        stroke: var(--border);
-        stroke-width: 6;
-      }
-      .intent-ring-fill {
-        fill: none;
-        stroke-width: 6;
-        stroke-linecap: round;
-        stroke-dasharray: 220;
-        stroke-dashoffset: 220;
-        transition: stroke-dashoffset 1.2s cubic-bezier(0.4, 0, 0.2, 1);
-      }
-      .intent-ring-label {
-        position: absolute;
-        inset: 0;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-      }
-      .intent-ring-pct {
-        font-family: var(--sans);
-        font-size: 18px;
-        font-weight: 800;
-        line-height: 1;
-      }
-      .intent-ring-sub {
-        font-size: 8px;
-        color: var(--dim);
-        letter-spacing: 0.06em;
-      }
+        /* Scan button */
+        .btn-scan {
+          display: flex;
+          align-items: center;
+          gap: 7px;
+          padding: 8px 20px;
+          background: var(--accent);
+          color: #000;
+          border: none;
+          border-radius: 4px;
+          font-family: var(--mono);
+          font-size: 11px;
+          font-weight: 700;
+          letter-spacing: 0.07em;
+          text-transform: uppercase;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+        .btn-scan:hover {
+          background: #f5ff6e;
+          box-shadow: 0 0 16px rgba(232, 255, 71, 0.3);
+        }
+        .btn-scan:disabled {
+          opacity: 0.4;
+          cursor: not-allowed;
+          box-shadow: none;
+        }
+        .btn-scan.scanning {
+          background: var(--panel);
+          color: var(--accent);
+          border: 1px solid var(--accent);
+        }
 
-      .intent-verdict {
-        flex: 1;
-      }
-      .intent-verdict-label {
-        font-size: 9px;
-        letter-spacing: 0.1em;
-        text-transform: uppercase;
-        color: var(--dim);
-        margin-bottom: 4px;
-      }
-      .intent-verdict-val {
-        font-family: var(--sans);
-        font-size: 18px;
-        font-weight: 800;
-        letter-spacing: -0.01em;
-        margin-bottom: 4px;
-      }
-      .intent-verdict-val.high {
-        color: var(--red);
-      }
-      .intent-verdict-val.medium {
-        color: var(--yellow);
-      }
-      .intent-verdict-val.low {
-        color: var(--teal);
-      }
-      .intent-verdict-desc {
-        font-size: 10px;
-        color: var(--dim);
-        line-height: 1.6;
-      }
+        .btn-export {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          padding: 7px 14px;
+          background: none;
+          border: 1px solid var(--border-hi);
+          border-radius: 4px;
+          color: var(--dim);
+          font-family: var(--mono);
+          font-size: 11px;
+          letter-spacing: 0.04em;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+        .btn-export:hover {
+          border-color: var(--text-lo);
+          color: var(--text);
+        }
+        .btn-export:disabled {
+          opacity: 0.35;
+          cursor: not-allowed;
+        }
 
-      .conclusion-box {
-        padding: 12px 14px;
-        background: var(--red-lo);
-        border: 1px solid rgba(255, 77, 77, 0.2);
-        border-left: 3px solid var(--red);
-        border-radius: 4px;
-        font-size: 11px;
-        color: var(--text);
-        line-height: 1.7;
-      }
-      .conclusion-box.low {
-        background: var(--teal-lo);
-        border-color: rgba(0, 200, 160, 0.2);
-        border-left-color: var(--teal);
-      }
-      .conclusion-box strong {
-        display: block;
-        font-size: 10px;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-        margin-bottom: 4px;
-      }
-      .conclusion-box.high strong {
-        color: var(--red);
-      }
-      .conclusion-box.low strong {
-        color: var(--teal);
-      }
+        /* Scan status badge */
+        .scan-status {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          font-size: 10px;
+          letter-spacing: 0.06em;
+          text-transform: uppercase;
+        }
+        .scan-status .dot {
+          width: 6px;
+          height: 6px;
+          border-radius: 50%;
+          background: var(--muted);
+        }
+        .scan-status.idle .dot {
+          background: var(--muted);
+        }
+        .scan-status.running .dot {
+          background: var(--accent);
+          box-shadow: 0 0 6px var(--accent);
+          animation: pulse 1s ease-in-out infinite;
+        }
+        .scan-status.done .dot {
+          background: var(--teal);
+          box-shadow: 0 0 6px var(--teal);
+        }
 
-      /* Right — entropy graph */
-      .charts-right {
-        display: flex;
-        flex-direction: column;
-        padding: 20px 24px;
-        overflow: hidden;
-        min-height: 0;
-      }
+        @keyframes pulse {
+          0%,
+          100% {
+            opacity: 1;
+          }
+          50% {
+            opacity: 0.3;
+          }
+        }
 
-      .entropy-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        margin-bottom: 12px;
-        flex-shrink: 0;
-      }
+        /* ── Body ── */
+        .body {
+          flex: 1;
+          min-height: 0;
+          overflow: hidden;
+          display: flex;
+          flex-direction: column;
+        }
 
-      .entropy-legend {
-        display: flex;
-        gap: 14px;
-        align-items: center;
-      }
-      .entropy-legend-item {
-        display: flex;
-        align-items: center;
-        gap: 5px;
-        font-size: 10px;
-        color: var(--dim);
-      }
-      .elc {
-        width: 24px;
-        height: 2px;
-        border-radius: 1px;
-      }
+        /* ── Tab Panels ── */
+        .tab-panels {
+          flex: 1;
+          min-height: 0;
+          overflow: hidden;
+        }
 
-      .chart-canvas-wrap {
-        flex: 1;
-        min-height: 0;
-        position: relative;
-      }
+        .tab-panel {
+          display: none;
+          height: 100%;
+        }
+        .tab-panel.active {
+          display: flex;
+          flex-direction: column;
+        }
 
-      /* Idle / scanning overlay */
-      .scan-overlay {
-        position: absolute;
-        inset: 0;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        background: var(--panel);
-        border: 1px dashed var(--border-hi);
-        border-radius: 6px;
-        gap: 12px;
-      }
-      .scan-overlay.hidden {
-        display: none;
-      }
+        /* ────────────────────────────────────────
+         TAB 1 — OVERVIEW
+      ──────────────────────────────────────── */
+        .overview-layout {
+          flex: 1;
+          min-height: 0;
+          overflow: hidden;
+          display: grid;
+          grid-template-rows: auto 1fr;
+        }
 
-      .scan-overlay-icon {
-        width: 48px;
-        height: 48px;
-        border: 1.5px solid var(--border-hi);
-        border-radius: 8px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
-      .scan-overlay-icon svg {
-        width: 22px;
-        height: 22px;
-        stroke: var(--dim);
-      }
-      .scan-overlay p {
-        font-size: 11px;
-        color: var(--dim);
-      }
+        /* Stat cards row */
+        .stat-row {
+          display: grid;
+          grid-template-columns: repeat(5, 1fr);
+          border-bottom: 1px solid var(--border);
+          flex-shrink: 0;
+        }
 
-      .scan-anim {
-        width: 260px;
-        height: 4px;
-        background: var(--border);
-        border-radius: 2px;
-        overflow: hidden;
-        display: none;
-      }
-      .scan-anim.running {
-        display: block;
-      }
-      .scan-anim-fill {
-        height: 100%;
-        background: var(--accent);
-        width: 0%;
-        transition: width 0.4s ease;
-        border-radius: 2px;
-      }
-      .scan-progress-label {
-        font-size: 10px;
-        color: var(--accent);
-        font-family: var(--mono);
-        letter-spacing: 0.05em;
-        margin-top: -4px;
-      }
+        .stat-card {
+          padding: 16px 20px;
+          border-right: 1px solid var(--border);
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+          position: relative;
+          overflow: hidden;
+          transition: background 0.2s;
+          min-width: 0;
+        }
+        .stat-card:last-child {
+          border-right: none;
+        }
+        .stat-card:hover {
+          background: var(--panel);
+        }
 
-      /* ────────────────────────────────────────
-       TAB 2 — REGIONS
-    ──────────────────────────────────────── */
-      .regions-layout {
-        flex: 1;
-        min-height: 0;
-        overflow: hidden;
-        display: flex;
-        flex-direction: column;
-      }
+        .stat-label {
+          font-size: 9px;
+          letter-spacing: 0.1em;
+          text-transform: uppercase;
+          color: var(--dim);
+          white-space: nowrap;
+        }
+        .stat-value {
+          font-family: var(--sans);
+          font-size: clamp(15px, 1.6vw, 26px);
+          font-weight: 800;
+          color: var(--text-hi);
+          letter-spacing: -0.02em;
+          line-height: 1;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        .stat-value[title] {
+          cursor: help;
+          border-bottom: 1px dashed var(--border-hi);
+          padding-bottom: 1px;
+        }
+        .stat-sub {
+          font-size: 10px;
+          color: var(--text-lo);
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
 
-      .regions-toolbar {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 12px 24px;
-        border-bottom: 1px solid var(--border);
-        flex-shrink: 0;
-        gap: 12px;
-      }
+        .stat-card.highlight-red .stat-value {
+          color: var(--red);
+        }
+        .stat-card.highlight-yellow .stat-value {
+          color: var(--yellow);
+        }
+        .stat-card.highlight-teal .stat-value {
+          color: var(--teal);
+        }
+        .stat-card.highlight-accent .stat-value {
+          color: var(--accent);
+        }
 
-      .filter-group {
-        display: flex;
-        gap: 6px;
-        align-items: center;
-      }
+        .stat-bar {
+          position: absolute;
+          bottom: 0;
+          left: 0;
+          height: 2px;
+          background: var(--accent);
+          transition: width 1s ease;
+        }
+        .stat-bar.red {
+          background: var(--red);
+        }
+        .stat-bar.teal {
+          background: var(--teal);
+        }
 
-      .filter-label {
-        font-size: 10px;
-        color: var(--dim);
-        letter-spacing: 0.06em;
-        text-transform: uppercase;
-        margin-right: 4px;
-      }
+        /* Charts area */
+        .charts-area {
+          display: grid;
+          grid-template-columns: 380px 1fr;
+          min-height: 0;
+          overflow: hidden;
+        }
 
-      .filter-chip {
-        padding: 4px 10px;
-        border-radius: 3px;
-        border: 1px solid var(--border-hi);
-        background: none;
-        color: var(--text-lo);
-        font-family: var(--mono);
-        font-size: 10px;
-        letter-spacing: 0.04em;
-        cursor: pointer;
-        transition: all 0.15s;
-      }
-      .filter-chip:hover {
-        border-color: var(--text-lo);
-        color: var(--text);
-      }
-      .filter-chip.active {
-        background: var(--accent-lo);
-        border-color: rgba(232, 255, 71, 0.3);
-        color: var(--accent);
-      }
-      .filter-chip.zero.active {
-        background: var(--blue-lo);
-        border-color: rgba(77, 159, 255, 0.3);
-        color: var(--blue);
-      }
-      .filter-chip.ff.active {
-        background: var(--yellow-lo);
-        border-color: rgba(255, 204, 0, 0.3);
-        color: var(--yellow);
-      }
-      .filter-chip.random.active {
-        background: var(--red-lo);
-        border-color: rgba(255, 77, 77, 0.3);
-        color: var(--red);
-      }
-      .filter-chip.multi.active {
-        background: var(--purple-lo);
-        border-color: rgba(192, 132, 252, 0.3);
-        color: var(--purple);
-      }
+        /* Left — pie + intent */
+        .charts-left {
+          border-right: 1px solid var(--border);
+          display: flex;
+          flex-direction: column;
+          overflow-y: auto;
+        }
 
-      .search-input {
-        background: var(--panel);
-        border: 1px solid var(--border-hi);
-        border-radius: 4px;
-        padding: 6px 12px;
-        color: var(--text);
-        font-family: var(--mono);
-        font-size: 11px;
-        outline: none;
-        width: 200px;
-        transition: border-color 0.2s;
-      }
-      .search-input::placeholder {
-        color: var(--text-lo);
-      }
-      .search-input:focus {
-        border-color: var(--accent);
-      }
+        .chart-block {
+          padding: 20px 24px;
+          border-bottom: 1px solid var(--border);
+        }
 
-      .regions-table-wrap {
-        flex: 1;
-        min-height: 0;
-        overflow-y: auto;
-      }
+        .chart-block-title {
+          font-size: 10px;
+          letter-spacing: 0.1em;
+          text-transform: uppercase;
+          color: var(--dim);
+          margin-bottom: 16px;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+        .chart-block-title::after {
+          content: "";
+          flex: 1;
+          height: 1px;
+          background: var(--border);
+        }
 
-      table {
-        width: 100%;
-        border-collapse: collapse;
-      }
+        .pie-wrap {
+          position: relative;
+          width: 200px;
+          height: 200px;
+          margin: 0 auto 16px;
+        }
 
-      thead {
-        position: sticky;
-        top: 0;
-        z-index: 10;
-        background: var(--panel2);
-      }
+        .pie-center {
+          position: absolute;
+          inset: 0;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          pointer-events: none;
+          transition: opacity 0.15s ease;
+        }
+        .pie-center-val {
+          font-family: var(--sans);
+          font-size: 28px;
+          font-weight: 800;
+          color: var(--text-hi);
+          line-height: 1;
+        }
+        .pie-center-label {
+          font-size: 9px;
+          color: var(--dim);
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+        }
 
-      thead th {
-        padding: 10px 16px;
-        text-align: left;
-        font-size: 9px;
-        letter-spacing: 0.1em;
-        text-transform: uppercase;
-        color: var(--dim);
-        border-bottom: 1px solid var(--border);
-        font-weight: 600;
-        cursor: pointer;
-        user-select: none;
-        white-space: nowrap;
-      }
-      thead th:hover {
-        color: var(--text);
-      }
-      thead th.sorted {
-        color: var(--accent);
-      }
+        .legend-list {
+          display: flex;
+          flex-direction: column;
+          gap: 5px;
+        }
 
-      tbody tr {
-        border-bottom: 1px solid var(--border);
-        transition: background 0.1s;
-      }
-      tbody tr:hover {
-        background: var(--panel);
-      }
+        .legend-item {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          padding: 6px 10px;
+          background: var(--surface);
+          border: 1px solid var(--border);
+          border-radius: 4px;
+          transition: border-color 0.2s, opacity 0.2s;
+        }
+        .legend-item:hover {
+          border-color: var(--border-hi);
+        }
 
-      tbody td {
-        padding: 10px 16px;
-        font-size: 11px;
-        color: var(--text);
-        white-space: nowrap;
-      }
+        .legend-dot {
+          width: 10px;
+          height: 10px;
+          border-radius: 2px;
+          flex-shrink: 0;
+        }
+        .legend-name {
+          flex: 1;
+          font-size: 11px;
+          color: var(--text);
+        }
+        .legend-count {
+          font-size: 11px;
+          font-weight: 600;
+        }
+        .legend-pct {
+          font-size: 10px;
+          color: var(--dim);
+          margin-left: 4px;
+        }
 
-      .td-offset {
-        color: var(--dim);
-        font-size: 10px;
-        font-family: var(--mono);
-      }
+        /* Intent score */
+        .intent-block {
+          padding: 20px 24px;
+        }
 
-      .wipe-badge {
-        display: inline-flex;
-        align-items: center;
-        padding: 2px 8px;
-        border-radius: 2px;
-        font-size: 9px;
-        font-weight: 700;
-        letter-spacing: 0.06em;
-      }
-      .badge-zero {
-        background: var(--blue-lo);
-        color: var(--blue);
-        border: 1px solid rgba(77, 159, 255, 0.25);
-      }
-      .badge-ff {
-        background: var(--yellow-lo);
-        color: var(--yellow);
-        border: 1px solid rgba(255, 204, 0, 0.25);
-      }
-      .badge-random {
-        background: var(--red-lo);
-        color: var(--red);
-        border: 1px solid rgba(255, 77, 77, 0.25);
-      }
-      .badge-multi {
-        background: var(--purple-lo);
-        color: var(--purple);
-        border: 1px solid rgba(192, 132, 252, 0.25);
-      }
+        .intent-score-wrap {
+          display: flex;
+          align-items: center;
+          gap: 20px;
+          margin-bottom: 16px;
+        }
 
-      .confidence-bar-wrap {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-      }
-      .confidence-bar {
-        width: 60px;
-        height: 4px;
-        background: var(--border);
-        border-radius: 2px;
-        overflow: hidden;
-      }
-      .confidence-fill {
-        height: 100%;
-        border-radius: 2px;
-      }
-      .conf-high {
-        background: var(--teal);
-      }
-      .conf-med {
-        background: var(--yellow);
-      }
-      .conf-low {
-        background: var(--dim);
-      }
-      .confidence-val {
-        font-size: 10px;
-        color: var(--dim);
-      }
+        .intent-ring {
+          position: relative;
+          width: 80px;
+          height: 80px;
+          flex-shrink: 0;
+        }
+        .intent-ring svg {
+          width: 80px;
+          height: 80px;
+          transform: rotate(-90deg);
+        }
+        .intent-ring-bg {
+          fill: none;
+          stroke: var(--border);
+          stroke-width: 6;
+        }
+        .intent-ring-fill {
+          fill: none;
+          stroke-width: 6;
+          stroke-linecap: round;
+          stroke-dasharray: 213.6; /* 2π × r(34) = 213.63 — must match JS circumference */
+          stroke-dashoffset: 213.6;
+          transition: stroke-dashoffset 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .intent-ring-label {
+          position: absolute;
+          inset: 0;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+        }
+        .intent-ring-pct {
+          font-family: var(--sans);
+          font-size: 18px;
+          font-weight: 800;
+          line-height: 1;
+        }
+        .intent-ring-sub {
+          font-size: 8px;
+          color: var(--dim);
+          letter-spacing: 0.06em;
+        }
 
-      .empty-state {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        gap: 10px;
-        padding: 60px;
-        color: var(--text-lo);
-        font-size: 11px;
-      }
-      .empty-state svg {
-        stroke: var(--muted);
-      }
+        .intent-verdict {
+          flex: 1;
+        }
+        .intent-verdict-label {
+          font-size: 9px;
+          letter-spacing: 0.1em;
+          text-transform: uppercase;
+          color: var(--dim);
+          margin-bottom: 4px;
+        }
+        .intent-verdict-val {
+          font-family: var(--sans);
+          font-size: 18px;
+          font-weight: 800;
+          letter-spacing: -0.01em;
+          margin-bottom: 4px;
+        }
+        .intent-verdict-val.high {
+          color: var(--red);
+        }
+        .intent-verdict-val.medium {
+          color: var(--yellow);
+        }
+        .intent-verdict-val.low {
+          color: var(--teal);
+        }
+        .intent-verdict-desc {
+          font-size: 10px;
+          color: var(--dim);
+          line-height: 1.6;
+        }
 
-      /* ────────────────────────────────────────
-       TAB 3 — RAW DATA
-    ──────────────────────────────────────── */
-      .raw-layout {
-        flex: 1;
-        min-height: 0;
-        overflow: hidden;
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-      }
+        .conclusion-box {
+          padding: 12px 14px;
+          background: var(--red-lo);
+          border: 1px solid rgba(255, 77, 77, 0.2);
+          border-left: 3px solid var(--red);
+          border-radius: 4px;
+          font-size: 11px;
+          color: var(--text);
+          line-height: 1.7;
+        }
+        .conclusion-box.low {
+          background: var(--teal-lo);
+          border-color: rgba(0, 200, 160, 0.2);
+          border-left-color: var(--teal);
+        }
+        .conclusion-box strong {
+          display: block;
+          font-size: 10px;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+          margin-bottom: 4px;
+        }
+        .conclusion-box.high strong {
+          color: var(--red);
+        }
+        .conclusion-box.low strong {
+          color: var(--teal);
+        }
 
-      .raw-panel {
-        display: flex;
-        flex-direction: column;
-        overflow: hidden;
-        border-right: 1px solid var(--border);
-      }
-      .raw-panel:last-child {
-        border-right: none;
-      }
+        /* Right — entropy graph */
+        .charts-right {
+          display: flex;
+          flex-direction: column;
+          padding: 20px 24px;
+          overflow: hidden;
+          min-height: 0;
+        }
 
-      .raw-panel-header {
-        padding: 14px 20px;
-        border-bottom: 1px solid var(--border);
-        font-size: 10px;
-        letter-spacing: 0.1em;
-        text-transform: uppercase;
-        color: var(--dim);
-        flex-shrink: 0;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-      }
+        .entropy-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          margin-bottom: 12px;
+          flex-shrink: 0;
+        }
 
-      .raw-scroll {
-        flex: 1;
-        overflow-y: auto;
-        padding: 16px 20px;
-      }
+        .entropy-legend {
+          display: flex;
+          gap: 14px;
+          align-items: center;
+        }
+        .entropy-legend-item {
+          display: flex;
+          align-items: center;
+          gap: 5px;
+          font-size: 10px;
+          color: var(--dim);
+        }
+        .elc {
+          width: 24px;
+          height: 2px;
+          border-radius: 1px;
+        }
 
-      .hex-row {
-        display: flex;
-        gap: 12px;
-        margin-bottom: 4px;
-        font-size: 11px;
-        line-height: 1.8;
-      }
-      .hex-addr {
-        color: var(--text-lo);
-        width: 72px;
-        flex-shrink: 0;
-      }
-      .hex-bytes {
-        color: var(--text);
-        flex: 1;
-        letter-spacing: 0.06em;
-        word-break: break-all;
-      }
-      .hex-bytes .h-zero {
-        color: var(--blue);
-      }
-      .hex-bytes .h-ff {
-        color: var(--yellow);
-      }
-      .hex-bytes .h-hi {
-        color: var(--red);
-      }
-      .hex-bytes .h-norm {
-        color: var(--text);
-      }
+        .chart-canvas-wrap {
+          flex: 1;
+          min-height: 0;
+          position: relative;
+        }
 
-      .block-selector {
-        padding: 10px 20px;
-        border-top: 1px solid var(--border);
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        flex-shrink: 0;
-        font-size: 11px;
-        color: var(--dim);
-      }
-      .block-nav-btn {
-        padding: 4px 10px;
-        background: var(--surface);
-        border: 1px solid var(--border-hi);
-        border-radius: 3px;
-        color: var(--text);
-        font-family: var(--mono);
-        font-size: 11px;
-        cursor: pointer;
-        transition: all 0.15s;
-      }
-      .block-nav-btn:hover {
-        border-color: var(--accent);
-        color: var(--accent);
-      }
-      .block-nav-btn:disabled {
-        opacity: 0.35;
-        cursor: not-allowed;
-      }
+        /* Idle / scanning overlay */
+        .scan-overlay {
+          position: absolute;
+          inset: 0;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          background: var(--panel);
+          border: 1px dashed var(--border-hi);
+          border-radius: 6px;
+          gap: 12px;
+        }
+        .scan-overlay.hidden {
+          display: none;
+        }
 
-      .block-id-input {
-        width: 70px;
-        background: var(--panel);
-        border: 1px solid var(--border-hi);
-        border-radius: 3px;
-        padding: 4px 8px;
-        color: var(--text);
-        font-family: var(--mono);
-        font-size: 11px;
-        outline: none;
-        text-align: center;
-      }
-      .block-id-input:focus {
-        border-color: var(--accent);
-      }
+        .scan-overlay-icon {
+          width: 48px;
+          height: 48px;
+          border: 1.5px solid var(--border-hi);
+          border-radius: 8px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        .scan-overlay-icon svg {
+          width: 22px;
+          height: 22px;
+          stroke: var(--dim);
+        }
+        .scan-overlay p {
+          font-size: 11px;
+          color: var(--dim);
+        }
 
-      .entropy-mini {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        margin-left: auto;
-      }
-      .entropy-val-big {
-        font-family: var(--sans);
-        font-size: 16px;
-        font-weight: 700;
-        line-height: 1;
-      }
-      .entropy-label {
-        font-size: 9px;
-        color: var(--dim);
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-      }
+        .scan-anim {
+          width: 260px;
+          height: 4px;
+          background: var(--border);
+          border-radius: 2px;
+          overflow: hidden;
+          display: none;
+        }
+        .scan-anim.running {
+          display: block;
+        }
+        .scan-anim-fill {
+          height: 100%;
+          background: var(--accent);
+          width: 0%;
+          transition: width 0.4s ease;
+          border-radius: 2px;
+        }
+        .scan-progress-label {
+          font-size: 10px;
+          color: var(--accent);
+          font-family: var(--mono);
+          letter-spacing: 0.05em;
+          margin-top: -4px;
+        }
 
-      /* Byte histogram */
-      .hist-canvas-wrap {
-        flex: 1;
-        min-height: 0;
-        padding: 16px 20px 0;
-        position: relative;
-      }
+        /* ────────────────────────────────────────
+         TAB 2 — REGIONS
+      ──────────────────────────────────────── */
+        .regions-layout {
+          flex: 1;
+          min-height: 0;
+          overflow: hidden;
+          display: flex;
+          flex-direction: column;
+        }
 
-      /* ── Footer ── */
-      footer {
-        height: 34px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 0 32px;
-        border-top: 1px solid var(--border);
-        background: var(--surface);
-        font-size: 10px;
-        color: var(--text-lo);
-        letter-spacing: 0.04em;
-        flex-shrink: 0;
-      }
+        .regions-toolbar {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 12px 24px;
+          border-bottom: 1px solid var(--border);
+          flex-shrink: 0;
+          gap: 12px;
+        }
 
-      /* Scrollbars */
-      ::-webkit-scrollbar {
-        width: 5px;
-        height: 5px;
-      }
-      ::-webkit-scrollbar-track {
-        background: var(--panel);
-      }
-      ::-webkit-scrollbar-thumb {
-        background: var(--border-hi);
-        border-radius: 3px;
-      }
-      ::-webkit-scrollbar-thumb:hover {
-        background: var(--muted);
-      }
+        .filter-group {
+          display: flex;
+          gap: 6px;
+          align-items: center;
+        }
 
-      /* Animations */
-      .stagger > * {
-        opacity: 0;
-        animation: fadeUp 0.35s ease forwards;
-      }
-      .stagger > *:nth-child(1) {
-        animation-delay: 0.05s;
-      }
-      .stagger > *:nth-child(2) {
-        animation-delay: 0.1s;
-      }
-      .stagger > *:nth-child(3) {
-        animation-delay: 0.15s;
-      }
-      .stagger > *:nth-child(4) {
-        animation-delay: 0.2s;
-      }
-      .stagger > *:nth-child(5) {
-        animation-delay: 0.25s;
-      }
+        .filter-label {
+          font-size: 10px;
+          color: var(--dim);
+          letter-spacing: 0.06em;
+          text-transform: uppercase;
+          margin-right: 4px;
+        }
 
-      @keyframes fadeUp {
-        from {
+        .filter-chip {
+          padding: 4px 10px;
+          border-radius: 3px;
+          border: 1px solid var(--border-hi);
+          background: none;
+          color: var(--text-lo);
+          font-family: var(--mono);
+          font-size: 10px;
+          letter-spacing: 0.04em;
+          cursor: pointer;
+          transition: all 0.15s;
+        }
+        .filter-chip:hover {
+          border-color: var(--text-lo);
+          color: var(--text);
+        }
+        .filter-chip.active {
+          background: var(--accent-lo);
+          border-color: rgba(232, 255, 71, 0.3);
+          color: var(--accent);
+        }
+        .filter-chip.zero.active {
+          background: var(--blue-lo);
+          border-color: rgba(77, 159, 255, 0.3);
+          color: var(--blue);
+        }
+        .filter-chip.ff.active {
+          background: var(--yellow-lo);
+          border-color: rgba(255, 204, 0, 0.3);
+          color: var(--yellow);
+        }
+        .filter-chip.random.active {
+          background: var(--red-lo);
+          border-color: rgba(255, 77, 77, 0.3);
+          color: var(--red);
+        }
+        .filter-chip.multi.active {
+          background: var(--purple-lo);
+          border-color: rgba(192, 132, 252, 0.3);
+          color: var(--purple);
+        }
+        .filter-chip.partial-zero.active {
+          background: rgba(77, 159, 255, 0.05);
+          border-color: rgba(77, 159, 255, 0.2);
+          color: rgba(77, 159, 255, 0.7);
+        }
+        .filter-chip.partial-ff.active {
+          background: rgba(255, 204, 0, 0.05);
+          border-color: rgba(255, 204, 0, 0.2);
+          color: rgba(255, 204, 0, 0.7);
+        }
+        .filter-chip.suspect.active {
+          background: rgba(255, 170, 0, 0.05);
+          border-color: rgba(255, 170, 0, 0.2);
+          color: rgba(255, 170, 0, 0.7);
+        }
+
+        .search-input {
+          background: var(--panel);
+          border: 1px solid var(--border-hi);
+          border-radius: 4px;
+          padding: 6px 12px;
+          color: var(--text);
+          font-family: var(--mono);
+          font-size: 11px;
+          outline: none;
+          width: 200px;
+          transition: border-color 0.2s;
+        }
+        .search-input::placeholder {
+          color: var(--text-lo);
+        }
+        .search-input:focus {
+          border-color: var(--accent);
+        }
+
+        .regions-table-wrap {
+          flex: 1;
+          min-height: 0;
+          overflow-y: auto;
+        }
+
+        table {
+          width: 100%;
+          border-collapse: collapse;
+        }
+
+        thead {
+          position: sticky;
+          top: 0;
+          z-index: 10;
+          background: var(--panel2);
+        }
+
+        thead th {
+          padding: 10px 16px;
+          text-align: left;
+          font-size: 9px;
+          letter-spacing: 0.1em;
+          text-transform: uppercase;
+          color: var(--dim);
+          border-bottom: 1px solid var(--border);
+          font-weight: 600;
+          cursor: pointer;
+          user-select: none;
+          white-space: nowrap;
+        }
+        thead th:hover {
+          color: var(--text);
+        }
+        thead th.sorted {
+          color: var(--accent);
+        }
+
+        tbody tr {
+          border-bottom: 1px solid var(--border);
+          transition: background 0.1s;
+        }
+        tbody tr:hover {
+          background: var(--panel);
+        }
+
+        tbody td {
+          padding: 10px 16px;
+          font-size: 11px;
+          color: var(--text);
+          white-space: nowrap;
+        }
+
+        .td-offset {
+          color: var(--dim);
+          font-size: 10px;
+          font-family: var(--mono);
+        }
+
+        .wipe-badge {
+          display: inline-flex;
+          align-items: center;
+          padding: 2px 8px;
+          border-radius: 2px;
+          font-size: 9px;
+          font-weight: 700;
+          letter-spacing: 0.06em;
+        }
+        .badge-zero {
+          background: var(--blue-lo);
+          color: var(--blue);
+          border: 1px solid rgba(77, 159, 255, 0.25);
+        }
+        .badge-ff {
+          background: var(--yellow-lo);
+          color: var(--yellow);
+          border: 1px solid rgba(255, 204, 0, 0.25);
+        }
+        .badge-random {
+          background: var(--red-lo);
+          color: var(--red);
+          border: 1px solid rgba(255, 77, 77, 0.25);
+        }
+        .badge-multi {
+          background: var(--purple-lo);
+          color: var(--purple);
+          border: 1px solid rgba(192, 132, 252, 0.25);
+        }
+        .badge-partial-zero {
+          background: rgba(77, 159, 255, 0.05);
+          color: rgba(77, 159, 255, 0.65);
+          border: 1px solid rgba(77, 159, 255, 0.15);
+        }
+        .badge-partial-ff {
+          background: rgba(255, 204, 0, 0.05);
+          color: rgba(255, 204, 0, 0.65);
+          border: 1px solid rgba(255, 204, 0, 0.15);
+        }
+        .badge-suspect {
+          background: rgba(255, 170, 0, 0.05);
+          color: rgba(255, 170, 0, 0.65);
+          border: 1px solid rgba(255, 170, 0, 0.15);
+        }
+
+        .confidence-bar-wrap {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+        .confidence-bar {
+          width: 60px;
+          height: 4px;
+          background: var(--border);
+          border-radius: 2px;
+          overflow: hidden;
+        }
+        .confidence-fill {
+          height: 100%;
+          border-radius: 2px;
+        }
+        .conf-high {
+          background: var(--teal);
+        }
+        .conf-med {
+          background: var(--yellow);
+        }
+        .conf-low {
+          background: var(--dim);
+        }
+        .confidence-val {
+          font-size: 10px;
+          color: var(--dim);
+        }
+
+        .empty-state {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          gap: 10px;
+          padding: 60px;
+          color: var(--text-lo);
+          font-size: 11px;
+        }
+        .empty-state svg {
+          stroke: var(--muted);
+        }
+
+        /* ────────────────────────────────────────
+         TAB 3 — RAW DATA
+      ──────────────────────────────────────── */
+        .raw-layout {
+          flex: 1;
+          min-height: 0;
+          overflow: hidden;
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+        }
+
+        .raw-panel {
+          display: flex;
+          flex-direction: column;
+          overflow: hidden;
+          border-right: 1px solid var(--border);
+        }
+        .raw-panel:last-child {
+          border-right: none;
+        }
+
+        .raw-panel-header {
+          padding: 14px 20px;
+          border-bottom: 1px solid var(--border);
+          font-size: 10px;
+          letter-spacing: 0.1em;
+          text-transform: uppercase;
+          color: var(--dim);
+          flex-shrink: 0;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+        }
+
+        .raw-scroll {
+          flex: 1;
+          overflow-y: auto;
+          padding: 16px 20px;
+        }
+
+        .hex-row {
+          display: flex;
+          gap: 12px;
+          margin-bottom: 4px;
+          font-size: 11px;
+          line-height: 1.8;
+        }
+        .hex-addr {
+          color: var(--text-lo);
+          width: 72px;
+          flex-shrink: 0;
+        }
+        .hex-bytes {
+          color: var(--text);
+          flex: 1;
+          letter-spacing: 0.06em;
+          word-break: break-all;
+        }
+        .hex-bytes .h-zero {
+          color: var(--blue);
+        }
+        .hex-bytes .h-ff {
+          color: var(--yellow);
+        }
+        .hex-bytes .h-hi {
+          color: var(--red);
+        }
+        .hex-bytes .h-norm {
+          color: var(--text);
+        }
+
+        .block-selector {
+          padding: 10px 20px;
+          border-top: 1px solid var(--border);
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          flex-shrink: 0;
+          font-size: 11px;
+          color: var(--dim);
+        }
+        .block-nav-btn {
+          padding: 4px 10px;
+          background: var(--surface);
+          border: 1px solid var(--border-hi);
+          border-radius: 3px;
+          color: var(--text);
+          font-family: var(--mono);
+          font-size: 11px;
+          cursor: pointer;
+          transition: all 0.15s;
+        }
+        .block-nav-btn:hover {
+          border-color: var(--accent);
+          color: var(--accent);
+        }
+        .block-nav-btn:disabled {
+          opacity: 0.35;
+          cursor: not-allowed;
+        }
+
+        .block-id-input {
+          width: 70px;
+          background: var(--panel);
+          border: 1px solid var(--border-hi);
+          border-radius: 3px;
+          padding: 4px 8px;
+          color: var(--text);
+          font-family: var(--mono);
+          font-size: 11px;
+          outline: none;
+          text-align: center;
+        }
+        .block-id-input:focus {
+          border-color: var(--accent);
+        }
+
+        .entropy-mini {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          margin-left: auto;
+        }
+        .entropy-val-big {
+          font-family: var(--sans);
+          font-size: 16px;
+          font-weight: 700;
+          line-height: 1;
+        }
+        .entropy-label {
+          font-size: 9px;
+          color: var(--dim);
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+        }
+
+        /* Byte histogram */
+        .hist-canvas-wrap {
+          flex: 1;
+          min-height: 0;
+          padding: 16px 20px 0;
+          position: relative;
+        }
+
+        /* ── Footer ── */
+        footer {
+          height: 36px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 0 40px;
+          border-top: 1px solid var(--border);
+          background: var(--surface);
+          font-size: 10px;
+          color: var(--text-lo);
+          letter-spacing: 0.04em;
+          flex-shrink: 0;
+        }
+        footer .footer-left {
+          display: flex;
+          align-items: center;
+          gap: 20px;
+        }
+        footer .footer-right {
+          color: var(--text-lo);
+          display: flex;
+          align-items: center;
+          gap: 6px;
+        }
+        .session-badge {
+          display: inline-flex;
+          align-items: center;
+          gap: 5px;
+          padding: 2px 8px;
+          background: var(--panel);
+          border: 1px solid var(--border-hi);
+          border-radius: 3px;
+          font-family: var(--mono);
+          font-size: 10px;
+          color: var(--text);
+          letter-spacing: 0.06em;
+        }
+        .session-badge .s-dot {
+          width: 5px;
+          height: 5px;
+          border-radius: 50%;
+          background: var(--teal);
+          box-shadow: 0 0 4px var(--teal);
+        }
+
+        /* Scrollbars */
+        ::-webkit-scrollbar {
+          width: 5px;
+          height: 5px;
+        }
+        ::-webkit-scrollbar-track {
+          background: var(--panel);
+        }
+        ::-webkit-scrollbar-thumb {
+          background: var(--border-hi);
+          border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+          background: var(--muted);
+        }
+
+        /* Animations */
+        .stagger > * {
           opacity: 0;
-          transform: translateY(8px);
+          animation: fadeUp 0.35s ease forwards;
         }
-        to {
-          opacity: 1;
-          transform: translateY(0);
+        .stagger > *:nth-child(1) {
+          animation-delay: 0.05s;
         }
-      }
+        .stagger > *:nth-child(2) {
+          animation-delay: 0.1s;
+        }
+        .stagger > *:nth-child(3) {
+          animation-delay: 0.15s;
+        }
+        .stagger > *:nth-child(4) {
+          animation-delay: 0.2s;
+        }
+        .stagger > *:nth-child(5) {
+          animation-delay: 0.25s;
+        }
 
-      .count-anim {
-        transition: all 0.3s ease;
-      }
+        @keyframes fadeUp {
+          from {
+            opacity: 0;
+            transform: translateY(8px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        .count-anim {
+          transition: all 0.3s ease;
+        }
+
+        /* ── Forensic Report & Custody Panels ─────────────────────────── */
+        .report-section {
+          background: var(--panel);
+          border: 1px solid var(--border);
+          border-radius: 6px;
+          padding: 18px 20px;
+          margin-bottom: 16px;
+        }
+        .report-section-title {
+          font-family: var(--sans);
+          font-size: 12px;
+          font-weight: 700;
+          color: var(--text-hi);
+          text-transform: uppercase;
+          letter-spacing: 0.06em;
+          margin-bottom: 10px;
+          padding-bottom: 8px;
+          border-bottom: 1px solid var(--border);
+        }
+        .report-section-body {
+          font-size: 12px;
+          line-height: 1.8;
+          color: var(--text);
+        }
+        .report-metric-card {
+          background: var(--panel);
+          border: 1px solid var(--border);
+          border-radius: 5px;
+          padding: 12px 14px;
+          text-align: center;
+        }
+        .report-metric-val {
+          font-family: var(--sans);
+          font-size: 20px;
+          font-weight: 800;
+          color: var(--text-hi);
+          margin-bottom: 3px;
+        }
+        .report-metric-label {
+          font-size: 10px;
+          color: var(--dim);
+          text-transform: uppercase;
+          letter-spacing: 0.06em;
+        }
+        .action-item {
+          display: flex;
+          gap: 12px;
+          padding: 10px 0;
+          border-bottom: 1px solid var(--border);
+          font-size: 12px;
+        }
+        .action-item:last-child {
+          border-bottom: none;
+        }
+        .action-priority {
+          font-size: 10px;
+          padding: 2px 7px;
+          border-radius: 3px;
+          font-weight: 700;
+          flex-shrink: 0;
+          height: fit-content;
+          margin-top: 2px;
+        }
+        .custody-event {
+          padding: 14px 0;
+          border-bottom: 1px solid var(--border);
+          font-size: 11px;
+        }
+        .custody-event:last-child {
+          border-bottom: none;
+        }
+        .custody-event-header {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          margin-bottom: 6px;
+        }
+        .custody-event-dot {
+          width: 8px;
+          height: 8px;
+          border-radius: 50%;
+          flex-shrink: 0;
+        }
+        .custody-event-seq {
+          color: var(--dim);
+          font-family: var(--mono);
+          flex-shrink: 0;
+          min-width: 24px;
+          font-size: 10px;
+        }
+        .custody-event-type {
+          font-weight: 700;
+          font-size: 10px;
+          text-transform: uppercase;
+          letter-spacing: .06em;
+          flex: 1;
+        }
+        .custody-event-time {
+          color: var(--dim);
+          font-family: var(--mono);
+          font-size: 10px;
+          flex-shrink: 0;
+        }
+        .custody-event-body {
+          margin-left: 18px;
+          display: flex;
+          flex-direction: column;
+          gap: 5px;
+        }
+        .custody-event-desc {
+          color: var(--text);
+          line-height: 1.65;
+          font-size: 11px;
+        }
+        .custody-event-hash-block {
+          background: var(--panel2);
+          border: 1px solid var(--border);
+          border-radius: 4px;
+          padding: 7px 10px;
+          display: grid;
+          grid-template-columns: 80px 1fr;
+          gap: 4px 10px;
+          font-family: var(--mono);
+          font-size: 10px;
+        }
+        .custody-hash-label {
+          color: var(--dim);
+          text-transform: uppercase;
+          letter-spacing: .05em;
+          white-space: nowrap;
+          padding-top: 1px;
+        }
+        .custody-hash-val {
+          color: var(--text-lo);
+          word-break: break-all;
+          line-height: 1.5;
+          user-select: all;
+        }
+        .custody-hash-val.evidence {
+          color: var(--teal);
+        }
+        .custody-event-meta {
+          font-size: 10px;
+          color: var(--dim);
+          font-family: var(--mono);
+        }
+        .custody-card {
+          background: var(--panel);
+          border: 1px solid var(--border);
+          border-radius: 5px;
+          padding: 12px 14px;
+        }
+        .custody-card-label {
+          font-size: 10px;
+          color: var(--dim);
+          text-transform: uppercase;
+          letter-spacing: 0.06em;
+          margin-bottom: 4px;
+        }
+        .custody-card-val {
+          font-size: 13px;
+          font-weight: 600;
+          color: var(--text-hi);
+          word-break: break-all;
+        }
+        .tag-list {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 6px;
+          margin-top: 6px;
+        }
+        .tag {
+          font-size: 11px;
+          padding: 2px 8px;
+          border-radius: 3px;
+          border: 1px solid var(--border-hi);
+          color: var(--text);
+          background: var(--panel2);
+          font-family: var(--mono);
+        }
+        .caveat-item {
+          display: flex;
+          gap: 8px;
+          padding: 6px 0;
+          font-size: 11px;
+          color: var(--text);
+          align-items: flex-start;
+          border-bottom: 1px solid var(--border);
+        }
+        .caveat-item:last-child {
+          border-bottom: none;
+        }
+        .caveat-dot {
+          color: var(--yellow);
+          margin-top: 3px;
+          flex-shrink: 0;
+        }
     </style>
   </head>
   <body>
@@ -1280,6 +1608,7 @@
           </div>
         </div>
         <div class="nav-right">
+          <span class="nav-version">v1.0.0 — DFIR</span>
           <div class="nav-file-info">
             <span class="fname" id="navFilename">suspect_drive.dd</span>
             <span class="fmeta" id="navFilemeta"
@@ -1312,6 +1641,38 @@
         </div>
       </div>
 
+      <!-- Case Details Banner — shown only if case details were supplied -->
+      <div
+        id="caseDetailsBanner"
+        style="
+          display: none;
+          align-items: center;
+          gap: 8px;
+          flex-wrap: wrap;
+          padding: 7px 20px;
+          background: var(--panel2);
+          border-bottom: 1px solid var(--border);
+          font-size: 11px;
+          color: var(--dim);
+          font-family: var(--mono);
+        "
+      >
+        <svg
+          width="11"
+          height="11"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          style="flex-shrink: 0"
+        >
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+          <circle cx="12" cy="7" r="4" />
+        </svg>
+      </div>
+
       <!-- Toolbar -->
       <div class="toolbar">
         <div class="toolbar-left">
@@ -1328,6 +1689,20 @@
             <button class="tab-btn" onclick="switchTab('raw', this)">
               Raw Data
             </button>
+            <button
+              class="tab-btn"
+              onclick="switchTab('report', this)"
+              id="tabBtnReport"
+            >
+              Forensic Report
+            </button>
+            <button
+              class="tab-btn"
+              onclick="switchTab('custody', this)"
+              id="tabBtnCustody"
+            >
+              Chain of Custody
+            </button>
           </div>
           <div class="toolbar-divider"></div>
           <div class="scan-status idle" id="scanStatus">
@@ -1338,9 +1713,18 @@
         <div class="toolbar-right">
           <button
             class="btn-export"
+            id="themeToggleBtn"
+            onclick="toggleTheme()"
+            title="Toggle light/dark mode"
+            style="margin-right: 6px; min-width: 36px; padding: 0 10px"
+          >
+            <span id="themeIcon">☀</span>
+          </button>
+          <button
+            class="btn-export"
             id="exportBtn"
             disabled
-            onclick="exportCSV()"
+            onclick="showExportMenu(event)"
           >
             <svg
               width="12"
@@ -1356,8 +1740,40 @@
               <polyline points="7 10 12 15 17 10" />
               <line x1="12" y1="15" x2="12" y2="3" />
             </svg>
-            Export CSV
+            Export
           </button>
+          <!-- Export dropdown -->
+          <div
+            id="exportMenu"
+            style="
+              display: none;
+              position: absolute;
+              right: 0;
+              top: calc(100% + 6px);
+              background: var(--panel);
+              border: 1px solid var(--border-hi);
+              border-radius: 6px;
+              z-index: 1000;
+              min-width: 160px;
+              box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+              overflow: hidden;
+            "
+          >
+            <div style="padding: 6px 0">
+              <button onclick="exportJSON()" class="export-menu-item">
+                JSON — full analysis
+              </button>
+              <button onclick="exportCSV()" class="export-menu-item">
+                CSV — regions table
+              </button>
+              <button onclick="exportPDF()" class="export-menu-item">
+                PDF — forensic report
+              </button>
+              <button onclick="exportDOCX()" class="export-menu-item">
+                DOCX — Word document
+              </button>
+            </div>
+          </div>
           <button class="btn-scan" id="scanBtn" onclick="runScan()">
             <svg
               width="12"
@@ -1382,12 +1798,16 @@
           <!-- ── TAB: OVERVIEW ── -->
           <div class="tab-panel active" id="panel-overview">
             <div class="overview-layout">
-              <!-- Stat Row -->
-              <div class="stat-row stagger" id="statRow">
+              <!-- Stat Row — 5 essential metrics, clean and uncluttered -->
+              <div
+                class="stat-row stagger"
+                id="statRow"
+                style="grid-template-columns: repeat(5, 1fr)"
+              >
                 <div class="stat-card">
                   <span class="stat-label">Blocks Scanned</span>
                   <span class="stat-value" id="stat-blocks">—</span>
-                  <span class="stat-sub" id="stat-blocks-sub">512 Bytes each</span>
+                  <span class="stat-sub" id="stat-blocks-sub">512 B each</span>
                   <div class="stat-bar" id="bar-blocks" style="width: 0%"></div>
                 </div>
                 <div class="stat-card highlight-red">
@@ -1412,15 +1832,25 @@
                     style="width: 0%"
                   ></div>
                 </div>
+                <div class="stat-card highlight-accent">
+                  <span class="stat-label">Intent Score</span>
+                  <span class="stat-value" id="stat-intent">—</span>
+                  <span class="stat-sub" id="stat-intent-label">—</span>
+                </div>
                 <div class="stat-card highlight-yellow">
                   <span class="stat-label">Avg Entropy (flagged)</span>
                   <span class="stat-value" id="stat-entropy">—</span>
                   <span class="stat-sub">bits / byte</span>
                 </div>
-                <div class="stat-card highlight-accent">
-                  <span class="stat-label">Intent Score</span>
-                  <span class="stat-value" id="stat-intent">—</span>
-                  <span class="stat-sub" id="stat-intent-label">—</span>
+                <!-- Hidden elements kept for JS compatibility -->
+                <div id="stat-coverage" style="display: none">
+                  <span id="stat-coverage-val"></span>
+                </div>
+                <div id="stat-dominant-card" style="display: none">
+                  <span id="stat-dominant-val"></span>
+                </div>
+                <div id="stat-conf-card" style="display: none">
+                  <span id="stat-conf-val"></span>
                 </div>
               </div>
 
@@ -1442,12 +1872,12 @@
                       <div class="legend-item">
                         <span
                           class="legend-dot"
-                          style="background: var(--blue)"
+                          style="background: #4d9fff"
                         ></span>
                         <span class="legend-name">Zero Fill (0x00)</span>
                         <span
                           class="legend-count"
-                          style="color: var(--blue)"
+                          style="color: #4d9fff"
                           id="leg-zero"
                           >—</span
                         >
@@ -1456,12 +1886,12 @@
                       <div class="legend-item">
                         <span
                           class="legend-dot"
-                          style="background: var(--yellow)"
+                          style="background: #ffcc00"
                         ></span>
                         <span class="legend-name">FF Fill (0xFF)</span>
                         <span
                           class="legend-count"
-                          style="color: var(--yellow)"
+                          style="color: #ffcc00"
                           id="leg-ff"
                           >—</span
                         >
@@ -1470,12 +1900,12 @@
                       <div class="legend-item">
                         <span
                           class="legend-dot"
-                          style="background: var(--red)"
+                          style="background: #ff4d4d"
                         ></span>
                         <span class="legend-name">Random Overwrite</span>
                         <span
                           class="legend-count"
-                          style="color: var(--red)"
+                          style="color: #ff4d4d"
                           id="leg-rand"
                           >—</span
                         >
@@ -1484,16 +1914,69 @@
                       <div class="legend-item">
                         <span
                           class="legend-dot"
-                          style="background: var(--purple)"
+                          style="background: #c084fc"
                         ></span>
                         <span class="legend-name">Multi-Pass</span>
                         <span
                           class="legend-count"
-                          style="color: var(--purple)"
+                          style="color: #c084fc"
                           id="leg-multi"
                           >—</span
                         >
                         <span class="legend-pct" id="leg-multi-pct"></span>
+                      </div>
+                      <!-- Divider: strong wipe types above / partial & suspect below -->
+                      <div
+                        style="
+                          border-top: 1px solid var(--border);
+                          margin: 2px 0;
+                          opacity: 0.5;
+                        "
+                      ></div>
+                      <div class="legend-item">
+                        <span
+                          class="legend-dot"
+                          style="background: rgba(77, 159, 255, 0.55)"
+                        ></span>
+                        <span class="legend-name">Partial 0x00</span>
+                        <span
+                          class="legend-count"
+                          style="color: rgba(77, 159, 255, 0.75)"
+                          id="leg-partial-zero"
+                          >—</span
+                        >
+                        <span
+                          class="legend-pct"
+                          id="leg-partial-zero-pct"
+                        ></span>
+                      </div>
+                      <div class="legend-item">
+                        <span
+                          class="legend-dot"
+                          style="background: rgba(255, 204, 0, 0.55)"
+                        ></span>
+                        <span class="legend-name">Partial 0xFF</span>
+                        <span
+                          class="legend-count"
+                          style="color: rgba(255, 204, 0, 0.75)"
+                          id="leg-partial-ff"
+                          >—</span
+                        >
+                        <span class="legend-pct" id="leg-partial-ff-pct"></span>
+                      </div>
+                      <div class="legend-item">
+                        <span
+                          class="legend-dot"
+                          style="background: rgba(255, 170, 0, 0.55)"
+                        ></span>
+                        <span class="legend-name">Suspect (Low Entropy)</span>
+                        <span
+                          class="legend-count"
+                          style="color: rgba(255, 170, 0, 0.75)"
+                          id="leg-suspect"
+                          >—</span
+                        >
+                        <span class="legend-pct" id="leg-suspect-pct"></span>
                       </div>
                     </div>
                   </div>
@@ -1547,7 +2030,7 @@
                   </div>
                 </div>
 
-                <!-- Right — Entropy graph -->
+                <!-- Right — Entropy graph + Disk Map -->
                 <div class="charts-right">
                   <div class="entropy-header">
                     <div class="chart-block-title" style="margin-bottom: 0">
@@ -1581,7 +2064,7 @@
                       </div>
                     </div>
                   </div>
-                  <div class="chart-canvas-wrap">
+                  <div class="chart-canvas-wrap" style="flex: 0 0 55%">
                     <canvas id="entropyChart"></canvas>
                     <div class="scan-overlay" id="entropyOverlay">
                       <div class="scan-overlay-icon">
@@ -1605,6 +2088,111 @@
                         class="scan-progress-label"
                         id="scanProgressLabel"
                       ></div>
+                    </div>
+                  </div>
+                  <!-- Disk Map -->
+                  <div
+                    id="diskMapSection"
+                    style="display: none; flex-shrink: 0; padding: 16px 0 0"
+                  >
+                    <div
+                      style="
+                        display: flex;
+                        align-items: center;
+                        justify-content: space-between;
+                        margin-bottom: 8px;
+                      "
+                    >
+                      <div class="chart-block-title" style="margin-bottom: 0">
+                        Disk Layout Map
+                      </div>
+                      <div
+                        style="
+                          display: flex;
+                          gap: 12px;
+                          font-size: 10px;
+                          color: var(--dim);
+                        "
+                      >
+                        <span
+                          style="display: flex; align-items: center; gap: 4px"
+                          ><span
+                            style="
+                              width: 10px;
+                              height: 10px;
+                              border-radius: 2px;
+                              background: rgba(77, 159, 255, 0.7);
+                              display: inline-block;
+                            "
+                          ></span
+                          >Zero Fill</span
+                        >
+                        <span
+                          style="display: flex; align-items: center; gap: 4px"
+                          ><span
+                            style="
+                              width: 10px;
+                              height: 10px;
+                              border-radius: 2px;
+                              background: rgba(255, 204, 0, 0.7);
+                              display: inline-block;
+                            "
+                          ></span
+                          >FF Fill</span
+                        >
+                        <span
+                          style="display: flex; align-items: center; gap: 4px"
+                          ><span
+                            style="
+                              width: 10px;
+                              height: 10px;
+                              border-radius: 2px;
+                              background: rgba(255, 77, 77, 0.85);
+                              display: inline-block;
+                            "
+                          ></span
+                          >Random</span
+                        >
+                        <span
+                          style="display: flex; align-items: center; gap: 4px"
+                          ><span
+                            style="
+                              width: 10px;
+                              height: 10px;
+                              border-radius: 2px;
+                              background: rgba(192, 132, 252, 0.8);
+                              display: inline-block;
+                            "
+                          ></span
+                          >Multi-Pass</span
+                        >
+                      </div>
+                    </div>
+                    <div
+                      id="diskMap"
+                      style="
+                        width: 100%;
+                        height: 28px;
+                        border-radius: 4px;
+                        overflow: hidden;
+                        border: 1px solid var(--border);
+                        background: var(--panel2);
+                        position: relative;
+                      "
+                    ></div>
+                    <div
+                      style="
+                        display: flex;
+                        justify-content: space-between;
+                        margin-top: 4px;
+                        font-size: 9px;
+                        color: var(--text-lo);
+                        font-family: var(--mono);
+                      "
+                    >
+                      <span>0x00000000</span>
+                      <span id="diskMapMidLabel">—</span>
+                      <span id="diskMapEndLabel">—</span>
                     </div>
                   </div>
                 </div>
@@ -1653,6 +2241,27 @@
                   >
                     Multi-Pass
                   </button>
+                  <button
+                    class="filter-chip partial-zero"
+                    data-filter="LIKELY_ZERO_WIPE"
+                    onclick="filterRegions('LIKELY_ZERO_WIPE', this)"
+                  >
+                    Partial 0x00
+                  </button>
+                  <button
+                    class="filter-chip partial-ff"
+                    data-filter="LIKELY_FF_WIPE"
+                    onclick="filterRegions('LIKELY_FF_WIPE', this)"
+                  >
+                    Partial 0xFF
+                  </button>
+                  <button
+                    class="filter-chip suspect"
+                    data-filter="LOW_ENTROPY_SUSPECT"
+                    onclick="filterRegions('LOW_ENTROPY_SUSPECT', this)"
+                  >
+                    Suspect
+                  </button>
                 </div>
                 <input
                   class="search-input"
@@ -1674,6 +2283,11 @@
                       <th onclick="sortTable('entropy')">Avg Entropy ↕</th>
                       <th onclick="sortTable('confidence')">Confidence ↕</th>
                       <th>Blocks</th>
+                      <th
+                        title="Partition boundary context — whether the region falls inside a known partition or beyond the last partition boundary"
+                      >
+                        Context
+                      </th>
                     </tr>
                   </thead>
                   <tbody id="regionsBody">
@@ -1709,11 +2323,28 @@
               <div class="raw-panel">
                 <div class="raw-panel-header">
                   <span>Hex View — Block <span id="hexBlockId">—</span></span>
-                  <span
-                    id="hexBlockType"
-                    style="font-size: 10px; color: var(--dim)"
-                    >—</span
-                  >
+                  <span style="display: flex; align-items: center; gap: 10px">
+                    <span
+                      id="hexApproxBadge"
+                      style="
+                        display: none;
+                        font-size: 9px;
+                        padding: 2px 7px;
+                        border-radius: 2px;
+                        background: rgba(255, 204, 0, 0.12);
+                        color: var(--yellow);
+                        border: 1px solid rgba(255, 204, 0, 0.3);
+                        letter-spacing: 0.05em;
+                        font-weight: 700;
+                      "
+                      >APPROX</span
+                    >
+                    <span
+                      id="hexBlockType"
+                      style="font-size: 10px; color: var(--dim)"
+                      >—</span
+                    >
+                  </span>
                 </div>
                 <div class="raw-scroll" id="hexScroll">
                   <div class="empty-state" style="margin-top: 40px">
@@ -1804,15 +2435,395 @@
               </div>
             </div>
           </div>
+          <!-- ── TAB: FORENSIC REPORT ── -->
+          <div class="tab-panel" id="panel-report">
+            <div style="flex: 1; min-height: 0; overflow-y: auto">
+              <div style="padding: 24px 28px; max-width: 960px; margin: 0 auto">
+                <div
+                  id="reportEmpty"
+                  style="text-align: center; padding: 60px 0; color: var(--dim)"
+                >
+                  <svg
+                    width="32"
+                    height="32"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    style="opacity: 0.5; margin-bottom: 12px"
+                  >
+                    <path
+                      d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
+                    />
+                    <polyline points="14 2 14 8 20 8" />
+                    <line x1="16" y1="13" x2="8" y2="13" />
+                    <line x1="16" y1="17" x2="8" y2="17" />
+                    <polyline points="10 9 9 9 8 9" />
+                  </svg>
+                  <p>Run a scan to generate the forensic report</p>
+                </div>
+                <div id="reportContent" style="display: none">
+                  <div
+                    id="reportBanner"
+                    style="
+                      border: 1px solid var(--border-hi);
+                      border-radius: 6px;
+                      padding: 20px 24px;
+                      margin-bottom: 24px;
+                      background: var(--panel2);
+                    "
+                  >
+                    <div
+                      style="
+                        display: flex;
+                        align-items: center;
+                        gap: 12px;
+                        margin-bottom: 10px;
+                      "
+                    >
+                      <div
+                        id="reportVerdictBadge"
+                        style="
+                          font-family: var(--mono);
+                          font-size: 11px;
+                          font-weight: 700;
+                          padding: 3px 10px;
+                          border-radius: 3px;
+                          letter-spacing: 0.08em;
+                        "
+                      >
+                        —
+                      </div>
+                      <div
+                        style="
+                          font-family: var(--sans);
+                          font-size: 16px;
+                          font-weight: 700;
+                          color: var(--text-hi);
+                        "
+                      >
+                        Forensic Analysis Report
+                      </div>
+                      <div
+                        style="
+                          margin-left: auto;
+                          font-size: 11px;
+                          color: var(--dim);
+                        "
+                        id="reportTimestamp"
+                      >
+                        —
+                      </div>
+                    </div>
+                    <div
+                      style="
+                        font-size: 12px;
+                        line-height: 1.8;
+                        color: var(--text);
+                      "
+                      id="reportExecSummary"
+                    >
+                      —
+                    </div>
+                    <!-- Case details strip — populated from URL params -->
+                    <div
+                      id="reportCaseDetails"
+                      style="
+                        display: none;
+                        margin-top: 14px;
+                        padding-top: 12px;
+                        border-top: 1px solid var(--border);
+                        display: grid;
+                        grid-template-columns: repeat(
+                          auto-fill,
+                          minmax(180px, 1fr)
+                        );
+                        gap: 8px 20px;
+                      "
+                    ></div>
+                  </div>
+                  <div
+                    style="
+                      display: grid;
+                      grid-template-columns: repeat(6, 1fr);
+                      gap: 10px;
+                      margin-bottom: 24px;
+                    "
+                    id="reportMetrics"
+                  ></div>
+                  <div class="report-section" id="reportMlSection">
+                    <div class="report-section-title">
+                      ML Classifier Analysis
+                    </div>
+                    <div class="report-section-body" id="reportMlBody">—</div>
+                    <div
+                      style="
+                        margin-top: 8px;
+                        font-size: 11px;
+                        color: var(--dim);
+                        font-style: italic;
+                      "
+                      id="reportMlMethod"
+                    >
+                      —
+                    </div>
+                  </div>
+                  <div class="report-section">
+                    <div class="report-section-title">
+                      Wipe Pattern Analysis
+                    </div>
+                    <div class="report-section-body" id="reportPatternBody">
+                      —
+                    </div>
+                    <div id="reportToolAttrib" style="margin-top: 10px"></div>
+                  </div>
+                  <div class="report-section">
+                    <div class="report-section-title">Evidence Reliability</div>
+                    <div
+                      style="
+                        display: inline-flex;
+                        align-items: center;
+                        gap: 8px;
+                        margin-bottom: 10px;
+                      "
+                    >
+                      <span style="font-size: 11px; color: var(--dim)"
+                        >Reliability:</span
+                      >
+                      <span
+                        id="reportReliabilityBadge"
+                        style="
+                          font-size: 11px;
+                          padding: 2px 8px;
+                          border-radius: 3px;
+                          font-weight: 700;
+                        "
+                        >—</span
+                      >
+                    </div>
+                    <div class="report-section-body" id="reportReliabilityDesc">
+                      —
+                    </div>
+                    <div id="reportCaveats" style="margin-top: 10px"></div>
+                  </div>
+                  <div class="report-section">
+                    <div class="report-section-title">Examiner Opinion</div>
+                    <div class="report-section-body" id="reportConclusion">
+                      —
+                    </div>
+                    <div
+                      style="
+                        margin-top: 8px;
+                        padding: 10px 12px;
+                        background: var(--panel2);
+                        border-radius: 4px;
+                        border-left: 2px solid var(--muted);
+                        font-size: 11px;
+                        color: var(--dim);
+                        font-style: italic;
+                      "
+                      id="reportConfidenceNote"
+                    >
+                      —
+                    </div>
+                  </div>
+                  <div class="report-section">
+                    <div class="report-section-title">Recommended Actions</div>
+                    <div id="reportActions"></div>
+                  </div>
+                  <div
+                    style="
+                      margin-top: 16px;
+                      padding: 12px 14px;
+                      border: 1px solid var(--border);
+                      border-radius: 4px;
+                      font-size: 11px;
+                      color: var(--dim);
+                      font-style: italic;
+                      line-height: 1.6;
+                    "
+                    id="reportExaminerNote"
+                  >
+                    —
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── TAB: CHAIN OF CUSTODY ── -->
+          <div class="tab-panel" id="panel-custody">
+            <div style="flex: 1; min-height: 0; overflow-y: auto">
+              <div style="padding: 24px 28px; max-width: 960px; margin: 0 auto">
+                <div
+                  id="custodyEmpty"
+                  style="text-align: center; padding: 60px 0; color: var(--dim)"
+                >
+                  <svg
+                    width="32"
+                    height="32"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    style="opacity: 0.5; margin-bottom: 12px"
+                  >
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                  </svg>
+                  <p>Run a scan to generate the chain of custody record</p>
+                </div>
+                <div id="custodyContent" style="display: none">
+                  <div
+                    style="
+                      display: flex;
+                      align-items: center;
+                      gap: 14px;
+                      margin-bottom: 20px;
+                    "
+                  >
+                    <div
+                      style="
+                        width: 36px;
+                        height: 36px;
+                        background: var(--teal-lo);
+                        border: 1px solid var(--teal);
+                        border-radius: 6px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        flex-shrink: 0;
+                      "
+                    >
+                      <svg
+                        width="18"
+                        height="18"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="var(--teal)"
+                        stroke-width="2"
+                      >
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <div
+                        style="
+                          font-family: var(--sans);
+                          font-size: 14px;
+                          font-weight: 700;
+                          color: var(--text-hi);
+                        "
+                      >
+                        Chain of Custody — LEA Grade Evidence Record
+                      </div>
+                      <div style="font-size: 11px; color: var(--dim)">
+                        ISO/IEC 27037 · ACPO · NIST SP 800-86 compliant
+                      </div>
+                    </div>
+                    <div
+                      id="custodyIntegrityBadge"
+                      style="
+                        margin-left: auto;
+                        font-size: 11px;
+                        padding: 3px 10px;
+                        border-radius: 3px;
+                        font-weight: 700;
+                        letter-spacing: 0.05em;
+                      "
+                    >
+                      —
+                    </div>
+                  </div>
+                  <div
+                    style="
+                      display: grid;
+                      grid-template-columns: repeat(3, 1fr);
+                      gap: 12px;
+                      margin-bottom: 20px;
+                    "
+                    id="custodySummaryCards"
+                  ></div>
+                  <div
+                    style="
+                      background: var(--panel2);
+                      border: 1px solid var(--border);
+                      border-radius: 6px;
+                      padding: 14px 16px;
+                      margin-bottom: 20px;
+                      font-family: var(--mono);
+                      font-size: 11px;
+                    "
+                  >
+                    <div
+                      style="
+                        color: var(--dim);
+                        margin-bottom: 6px;
+                        text-transform: uppercase;
+                        letter-spacing: 0.06em;
+                      "
+                    >
+                      Final Chain Hash (tamper-evident)
+                    </div>
+                    <div
+                      style="color: var(--accent); word-break: break-all"
+                      id="custodyFinalHash"
+                    >
+                      —
+                    </div>
+                  </div>
+                  <div
+                    style="
+                      font-size: 11px;
+                      color: var(--dim);
+                      text-transform: uppercase;
+                      letter-spacing: 0.06em;
+                      margin-bottom: 10px;
+                    "
+                  >
+                    Evidence Events
+                  </div>
+                  <div id="custodyTimeline"></div>
+                  <div
+                    style="
+                      margin-top: 20px;
+                      padding: 12px 14px;
+                      border: 1px solid var(--border);
+                      border-radius: 4px;
+                      font-size: 11px;
+                      color: var(--dim);
+                      line-height: 1.7;
+                    "
+                  >
+                    <strong style="color: var(--text)">Legal Notice:</strong>
+                    This chain of custody record uses tamper-evident SHA-256
+                    hash chaining. Each entry hash is computed from the previous
+                    entry hash and current entry content. Any modification
+                    invalidates subsequent entries and can be independently
+                    verified.
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
       <!-- Footer -->
       <footer>
-        <div>
-          WipeTrace DFIR Engine · Block Size: 512 B · Threshold H &gt; 7.8
+        <div class="footer-left">
+          <span>WipeTrace DFIR Engine</span>
+          <span>Block Size: 512 B</span>
+          <span>Threshold: H &gt; 7.8 → RANDOM</span>
         </div>
-        <div id="footerScanTime">Last scan: never</div>
+        <div class="footer-right">
+          SESSION
+          <span class="session-badge"
+            ><span class="s-dot"></span><span id="navSession2">—</span></span
+          >
+          <span id="footerScanTime" style="margin-left: 12px"
+            >Last scan: never</span
+          >
+        </div>
       </footer>
     </div>
 
@@ -1821,7 +2832,69 @@
       // CONFIG
       // ─────────────────────────────────────────
       const API_BASE = "http://localhost:8000";
-      const POLL_MS = 2000;
+      const POLL_MS = 800; // Poll more frequently for smoother UI
+
+      // ── Smooth progress animation ──────────────────────────────────────────
+      // Instead of jumping directly to backend-reported pct, we smoothly
+      // interpolate the displayed value toward the target, so the bar
+      // never stalls at 0% or jumps from 0% to 100%.
+      let _displayedPct = 0; // what's shown on screen
+      let _targetPct = 0; // latest value from backend
+      let _smoothTimer = null;
+
+      const PHASE_LABELS = {
+        hashing: "Computing image hash…",
+        classifying: "Scanning disk blocks…",
+        ml_analysis: "ML ensemble analysis…",
+        aggregating: "Building wipe regions…",
+        scoring: "Computing forensic score…",
+        reporting: "Generating forensic report…",
+        writing: "Writing results…",
+        done: "Scan complete",
+      };
+
+      function _startSmooth() {
+        if (_smoothTimer) return;
+        _smoothTimer = setInterval(() => {
+          if (_displayedPct < _targetPct) {
+            // Ease-out: move 15% of gap per tick, minimum 0.3 per tick
+            const gap = _targetPct - _displayedPct;
+            const step = Math.max(gap * 0.15, 0.3);
+            _displayedPct = Math.min(_displayedPct + step, _targetPct);
+            _applyDisplayedPct();
+          }
+        }, 40); // ~25fps smooth animation
+      }
+
+      function _stopSmooth() {
+        if (_smoothTimer) {
+          clearInterval(_smoothTimer);
+          _smoothTimer = null;
+        }
+      }
+
+      function _setTargetPct(pct) {
+        _targetPct = Math.max(_targetPct, pct); // never go backwards
+        _startSmooth();
+      }
+
+      function _applyDisplayedPct() {
+        const pct = _displayedPct;
+        const fill = document.getElementById("scanAnimFill");
+        const label = document.getElementById("scanProgressLabel");
+        if (fill) fill.style.width = pct.toFixed(1) + "%";
+        if (label) label.textContent = Math.floor(pct) + "%";
+        const statusText = document.getElementById("scanStatusText");
+        if (statusText && pct < 100)
+          statusText.textContent = `Scanning… ${Math.floor(pct)}% complete`;
+      }
+
+      function _resetSmooth() {
+        _stopSmooth();
+        _displayedPct = 0;
+        _targetPct = 0;
+        _applyDisplayedPct();
+      }
       const SESSION_ID =
         new URLSearchParams(window.location.search).get("session") || null;
 
@@ -1831,6 +2904,7 @@
       // the camelCase shape the rest of the UI uses
       // ─────────────────────────────────────────
       function adaptApiResponse(json) {
+        _rawApiJson = json; // store for report/custody rendering
         const regions = (json.regions || []).map((r) => ({
           id: r.id,
           start: r.start,
@@ -1840,12 +2914,14 @@
           entropy: r.entropy,
           confidence: r.confidence,
           blockCount: r.block_count,
+          boundary_context: r.boundary_context || "UNKNOWN",
         }));
         return {
           blocks: json.blocks || [],
           regions,
           totalBlocks: json.stats.total_blocks,
           stats: json.stats,
+          partition_map: json.partition_map || null,
         };
       }
 
@@ -1853,6 +2929,7 @@
       // STATE
       // ─────────────────────────────────────────
       let scanData = null;
+      let _rawApiJson = null; // raw API JSON stored by adaptApiResponse
       let activeFilter = "all";
       let sortKey = null;
       let sortDir = 1;
@@ -1866,6 +2943,14 @@
       // ─────────────────────────────────────────
       // SCAN — real API flow
       // ─────────────────────────────────────────
+
+      function _stopPoll() {
+        if (pollTimer) {
+          clearInterval(pollTimer);
+          pollTimer = null;
+        }
+      }
+
       async function runScan() {
         if (!SESSION_ID) {
           alert(
@@ -1889,17 +2974,22 @@
         statusText.textContent = "Initialising scan…";
         overlayMsg.textContent = "Starting scan engine…";
         scanAnim.classList.add("running");
-        const _fill = document.getElementById("scanAnimFill");
-        const _label = document.getElementById("scanProgressLabel");
-        if (_fill) _fill.style.width = "0%";
-        if (_label) _label.textContent = "0%";
+        _resetSmooth();
+        _setTargetPct(2); // immediate 2% so UI feels responsive
 
         // ── Step 1: POST /scan ──────────────────────────────────────────────
         try {
           const triggerRes = await fetch(`${API_BASE}/scan`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ session_id: SESSION_ID }),
+            body: JSON.stringify({
+              session_id: SESSION_ID,
+              examiner: CASE_DETAILS.examiner || undefined,
+              case_id: CASE_DETAILS.case_id || undefined,
+              agency: CASE_DETAILS.agency || undefined,
+              device: CASE_DETAILS.device || undefined,
+              notes: CASE_DETAILS.notes || undefined,
+            }),
           });
           if (!triggerRes.ok) {
             const err = await triggerRes.json().catch(() => ({}));
@@ -1910,7 +3000,7 @@
           return;
         }
 
-        // ── Step 2: Poll /scan/status every 2s ─────────────────────────────
+        // ── Step 2: Poll /scan/status every 800 ms ─────────────────────────
         statusText.textContent = "Scan running — analysing blocks…";
         overlayMsg.textContent = "Scanning disk image…";
 
@@ -1921,28 +3011,23 @@
             );
             const pollData = await pollRes.json();
             const pct = pollData.progress || 0;
-            statusText.textContent = `Scanning… ${pct}% complete`;
-            overlayMsg.textContent = `Analysing blocks…`;
-            const fill = document.getElementById("scanAnimFill");
-            const label = document.getElementById("scanProgressLabel");
-            if (fill) fill.style.width = pct + "%";
-            if (label) label.textContent = pct + "%";
+            const phase = pollData.phase || "classifying";
+            const phaseLabel = PHASE_LABELS[phase] || "Scanning…";
+            overlayMsg.textContent = phaseLabel;
+            _setTargetPct(pct); // smooth animated progress
 
             if (pollData.status === "done") {
-              clearInterval(pollTimer);
-              pollTimer = null;
+              _stopPoll();
               if (!_resultsFetched) {
                 _resultsFetched = true;
                 _fetchResults();
               }
             } else if (pollData.status === "error") {
-              clearInterval(pollTimer);
-              pollTimer = null;
+              _stopPoll();
               _scanError(`Engine error: ${pollData.error || "unknown"}`);
             }
           } catch (e) {
-            clearInterval(pollTimer);
-            pollTimer = null;
+            _stopPoll();
             _scanError(`Lost connection to server: ${e.message}`);
           }
         }, POLL_MS);
@@ -1985,6 +3070,14 @@
       }
 
       function finalizeScan() {
+        // Complete smooth progress to 100%
+        _setTargetPct(100);
+        setTimeout(() => {
+          _stopSmooth();
+          _displayedPct = 100;
+          _applyDisplayedPct();
+        }, 600);
+
         const btn = document.getElementById("scanBtn");
         const status = document.getElementById("scanStatus");
         const statusText = document.getElementById("scanStatusText");
@@ -2007,7 +3100,12 @@
         renderStats();
         renderPie();
         renderEntropyChart();
+        renderDiskMap();
         renderRegionsTable();
+        if (_rawApiJson) {
+          renderForensicReport(_rawApiJson);
+          renderCustodyChain(_rawApiJson);
+        }
 
         // Enable raw data
         document.getElementById("prevBlockBtn").disabled = false;
@@ -2018,40 +3116,97 @@
       }
 
       // ─────────────────────────────────────────
+      // ─────────────────────────────────────────
       // STATS
       // ─────────────────────────────────────────
+      // All 7 types the classifier emits for suspicious blocks
+      const KNOWN_WIPE_TYPES = new Set([
+        "ZERO_WIPE",
+        "FF_WIPE",
+        "RANDOM_WIPE",
+        "MULTI_PASS",
+        "LIKELY_ZERO_WIPE",
+        "LIKELY_FF_WIPE",
+        "LOW_ENTROPY_SUSPECT",
+      ]);
+
       function renderStats() {
         const d = scanData;
-        const suspicious = d.blocks.filter((b) => b.type !== "NORMAL").length;
+        // Derive suspicious block count from regions (post-aggregation, consistent
+        // with the pie chart and disk map — raw d.blocks may contain types that were
+        // filtered out by the aggregator's size/series checks).
+        const suspicious = d.regions.reduce((s, r) => s + r.blockCount, 0);
         const pct = ((suspicious / d.totalBlocks) * 100).toFixed(1);
         const avgE =
-          suspicious > 0
+          d.regions.length > 0
             ? (
-                d.blocks
-                  .filter((b) => b.type !== "NORMAL")
-                  .reduce((s, b) => s + b.entropy, 0) / suspicious
+                d.regions.reduce((s, r) => s + r.entropy * r.blockCount, 0) /
+                suspicious
               ).toFixed(2)
             : "0.00";
 
-        // Intent score
-        const intentScore = Math.min(
-          100,
-          Math.round(
-            (suspicious / d.totalBlocks) * 100 * 4.5 + d.regions.length * 1.2,
-          ),
-        );
+        // ── Use backend-calculated intent score, NOT a local formula ──────────
+        // Local recalc was: (suspicious/total)*100 * 4.5 → always ~100% on real images
+        const intentScore =
+          d.stats && d.stats.intent_score != null
+            ? Math.min(100, Math.round(d.stats.intent_score))
+            : 0;
         const intentLabel =
-          intentScore >= 70 ? "HIGH" : intentScore >= 35 ? "MEDIUM" : "LOW";
+          d.stats && d.stats.verdict
+            ? d.stats.verdict
+            : intentScore >= 70
+              ? "HIGH"
+              : intentScore >= 35
+                ? "MEDIUM"
+                : "LOW";
 
-        animateCount("stat-blocks", d.totalBlocks.toLocaleString());
-        animateCount("stat-suspicious", suspicious.toLocaleString());
+        // ── Additional detail stats from backend ─────────────────────────────
+        const coveragePct = d.stats
+          ? (d.stats.coverage_pct || 0).toFixed(1)
+          : "0.0";
+        const dominantType = d.stats
+          ? (d.stats.dominant_type || "NORMAL").replace(/_/g, " ")
+          : "NORMAL";
+        const avgConf =
+          d.regions.length > 0
+            ? (
+                (d.regions.reduce((s, r) => s + r.confidence, 0) /
+                  d.regions.length) *
+                100
+              ).toFixed(0)
+            : 0;
+
+        animateCount(
+          "stat-blocks",
+          smartFmt(d.totalBlocks),
+          d.totalBlocks.toLocaleString(),
+        );
+        animateCount(
+          "stat-suspicious",
+          smartFmt(suspicious),
+          suspicious.toLocaleString(),
+        );
         animateCount("stat-regions", d.regions.length.toString());
         animateCount("stat-entropy", avgE);
         animateCount("stat-intent", intentScore + "%");
 
         document.getElementById("stat-suspicious-sub").textContent =
-          pct + "% of total";
+          pct + "% of total · " + coveragePct + "% disk";
         document.getElementById("stat-intent-label").textContent = intentLabel;
+
+        // ── Extra stat cards (coverage + dominant type) ──────────────────────
+        const coverageCard = document.getElementById("stat-coverage");
+        if (coverageCard) {
+          // Update hidden compat spans (used by export functions) but keep cards hidden
+          document.getElementById("stat-coverage-val").textContent =
+            coveragePct + "%";
+          document.getElementById("stat-dominant-val").textContent =
+            dominantType;
+          document.getElementById("stat-conf-val").textContent = avgConf + "%";
+          // Do NOT un-hide these cards — they would overflow the 5-column grid
+          // and render as floating text below the stat bar (visible in screenshot).
+          // Coverage and dominant type are shown in the Forensic Report tab instead.
+        }
 
         // Bars
         setTimeout(() => {
@@ -2086,17 +3241,7 @@
         vEl.textContent = intentLabel;
         vEl.className = "intent-verdict-val " + intentLabel.toLowerCase();
 
-        const descMap = {
-          HIGH: "Multiple contiguous wipe regions detected. Strong statistical evidence of deliberate data destruction consistent with anti-forensic tool usage.",
-          MEDIUM:
-            "Moderate wipe activity detected. Patterns suggest selective file destruction. Further correlation with execution artefacts recommended.",
-          LOW: "Limited wipe signatures found. May indicate normal disk activity. Low probability of intentional anti-forensic behaviour.",
-        };
-        document.getElementById("intentDesc").textContent =
-          descMap[intentLabel];
-
-        const box = document.getElementById("conclusionBox");
-        box.className = "conclusion-box " + intentLabel.toLowerCase();
+        // ── Dynamic description — uses actual scan numbers, not canned text ──
         const typeCount = {};
         d.regions.forEach((r) => {
           typeCount[r.type] = (typeCount[r.type] || 0) + 1;
@@ -2104,18 +3249,312 @@
         const dominant = Object.entries(typeCount).sort(
           (a, b) => b[1] - a[1],
         )[0];
-        box.innerHTML = `<strong>Analysis Conclusion</strong>
-${
-  intentLabel === "HIGH"
-    ? `High probability of deliberate data overwriting detected. ${suspicious.toLocaleString()} blocks (${pct}%) classified as wipe artefacts across ${d.regions.length} distinct regions. Dominant signature: ${dominant[0].replace("_", " ")}. Evidence consistent with intentional evidence destruction.`
-    : intentLabel === "MEDIUM"
-      ? `Moderate wipe activity across ${d.regions.length} regions covering ${pct}% of the imaged space. Primary pattern: ${dominant[0].replace("_", " ")}. Recommend correlating with prefetch and USN journal data.`
-      : `Low level of wipe activity detected (${pct}% of disk). ${d.regions.length} region(s) flagged. No strong indication of deliberate anti-forensic wiping.`
-}`;
+        const dominantLabel = dominant ? dominant[0].replace(/_/g, " ") : "N/A";
+        const multiPassCount = typeCount["MULTI_PASS"] || 0;
+        const randomCount = typeCount["RANDOM_WIPE"] || 0;
+
+        const descMap = {
+          HIGH:
+            `${d.regions.length} contiguous wipe region${d.regions.length !== 1 ? "s" : ""} detected across ${coveragePct}% of imaged space. ` +
+            (multiPassCount > 0
+              ? `${multiPassCount} multi-pass region${multiPassCount !== 1 ? "s" : ""} indicate tool-assisted overwriting. `
+              : "") +
+            (randomCount > 0
+              ? `${randomCount} CSPRNG region${randomCount !== 1 ? "s" : ""} consistent with secure-delete utilities. `
+              : "") +
+            `Dominant signature: ${dominantLabel}. Strong statistical evidence of deliberate anti-forensic activity.`,
+          MEDIUM:
+            `${d.regions.length} region${d.regions.length !== 1 ? "s" : ""} flagged covering ${coveragePct}% of disk. Primary pattern: ${dominantLabel}. ` +
+            `${suspicious.toLocaleString()} blocks (${pct}%) show elevated entropy or byte uniformity. Recommend correlating with prefetch, USN journal, and $RECYCLE.BIN artefacts.`,
+          LOW: `${suspicious.toLocaleString()} blocks (${pct}%) flagged — ${d.regions.length > 0 ? d.regions.length + " region(s) detected, likely" : "no distinct regions formed, possibly"} filesystem artefacts or sparse data rather than deliberate wiping. Entropy levels and region continuity do not meet high-confidence wipe thresholds.`,
+          NEGLIGIBLE: `No significant wipe signatures detected. ${suspicious.toLocaleString()} borderline block${suspicious !== 1 ? "s" : ""} may be compressed or encrypted data (${pct}% of disk). No anti-forensic activity indicated.`,
+        };
+        document.getElementById("intentDesc").textContent =
+          descMap[intentLabel] || descMap.NEGLIGIBLE;
+
+        const box = document.getElementById("conclusionBox");
+        box.className = "conclusion-box " + intentLabel.toLowerCase();
+        const coverageBytes = d.stats
+          ? formatBytes(d.stats.suspicious_bytes || suspicious * 512)
+          : "—";
+        const conclusionMap = {
+          HIGH:
+            `<strong>High-Confidence: Deliberate Wiping Detected</strong>` +
+            `Analysis of ${d.totalBlocks.toLocaleString()} blocks (${formatBytes(d.totalBlocks * 512)}) identified ${suspicious.toLocaleString()} wipe artefacts across ${d.regions.length} region${d.regions.length !== 1 ? "s" : ""} (${coveragePct}% disk coverage, ~${coverageBytes}). ` +
+            `Dominant pattern: ${dominantLabel}. Intent score: ${intentScore}/100. ` +
+            (multiPassCount > 0
+              ? `Multi-pass overwriting detected — consistent with NIST 800-88 or DoD 5220.22-M compliant wipe tools. `
+              : "") +
+            `Evidence meets threshold for deliberate evidence destruction.`,
+          MEDIUM:
+            `<strong>Moderate: Selective Wipe Activity</strong>` +
+            `${d.regions.length} region${d.regions.length !== 1 ? "s" : ""} flagged covering ${coveragePct}% of the image (~${coverageBytes}). ` +
+            `Primary signature: ${dominantLabel}. The pattern suggests targeted file or partition overwriting rather than full-disk sanitisation. Further correlation with filesystem metadata recommended.`,
+          LOW:
+            `<strong>Low: Minimal Wipe Indicators</strong>` +
+            `${d.regions.length} region${d.regions.length !== 1 ? "s" : ""} detected covering ${coveragePct}% of disk. ` +
+            `${pct}% of blocks show wipe-like signatures, below confidence thresholds for deliberate anti-forensic action. High-entropy blocks likely reflect compressed or encrypted data rather than CSPRNG overwriting.`,
+          NEGLIGIBLE:
+            `<strong>Negligible: No Wipe Activity Detected</strong>` +
+            `Scan of ${d.totalBlocks.toLocaleString()} blocks found no sustained wipe regions. Disk content is consistent with normal filesystem activity. No anti-forensic artefacts detected.`,
+        };
+        box.innerHTML = conclusionMap[intentLabel] || conclusionMap.NEGLIGIBLE;
       }
 
-      function animateCount(id, target) {
-        document.getElementById(id).textContent = target;
+      // smartFmt — abbreviates large integers for stat cards (e.g. 1,752,558 → "1.75M")
+      // Sets a title attribute on the element so the full precise value appears on hover.
+      function smartFmt(n) {
+        if (typeof n === "string") return n; // already formatted (e.g. entropy "5.81")
+        if (n >= 1_000_000) return (n / 1_000_000).toFixed(2) + "M";
+        if (n >= 100_000) return (n / 1_000).toFixed(1) + "K";
+        if (n >= 10_000) return (n / 1_000).toFixed(1) + "K";
+        return n.toLocaleString();
+      }
+
+      function animateCount(id, target, fullValue) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.textContent = target;
+        // Show full precise value on hover via native tooltip
+        if (fullValue !== undefined) el.title = String(fullValue);
+      }
+
+      // ─────────────────────────────────────────
+      // DISK MAP
+      // ─────────────────────────────────────────
+      function renderDiskMap() {
+        const d = scanData;
+        if (!d || !d.regions.length) return;
+        const mapEl = document.getElementById("diskMap");
+        const section = document.getElementById("diskMapSection");
+        if (!mapEl || !section) return;
+
+        section.style.display = "";
+
+        requestAnimationFrame(() => {
+          const totalBytes = d.totalBlocks * 512;
+          const W = mapEl.offsetWidth || 800;
+
+          const typeColors = {
+            ZERO_WIPE: "rgba(77,159,255,0.7)",
+            FF_WIPE: "rgba(255,204,0,0.7)",
+            RANDOM_WIPE: "rgba(255,77,77,0.85)",
+            MULTI_PASS: "rgba(192,132,252,0.8)",
+            LIKELY_ZERO_WIPE: "rgba(77,159,255,0.4)",
+            LIKELY_FF_WIPE: "rgba(255,204,0,0.4)",
+            LOW_ENTROPY_SUSPECT: "rgba(255,204,0,0.25)",
+          };
+
+          mapEl.innerHTML = "";
+
+          // ── Partition map overlay ──────────────────────────────────────────
+          // If the backend provided a partition map, render:
+          //   1. A shaded "beyond boundary" region past the last partition
+          //   2. Vertical tick marks at each partition boundary
+          const pm = d.partition_map;
+          let lastUsedPct = 100; // default: assume whole disk is used
+
+          if (
+            pm &&
+            pm.scheme !== "UNKNOWN" &&
+            pm.partitions &&
+            pm.partitions.length > 0
+          ) {
+            const lastUsedBytes = (pm.last_used_lba + 1) * 512;
+            lastUsedPct = Math.min((lastUsedBytes / totalBytes) * 100, 100);
+
+            // Shaded beyond-boundary overlay
+            if (lastUsedPct < 99) {
+              const shade = document.createElement("div");
+              shade.title =
+                "Beyond last partition boundary — likely unwritten sectors";
+              shade.style.cssText = [
+                "position:absolute",
+                "top:0",
+                "bottom:0",
+                `left:${lastUsedPct.toFixed(3)}%`,
+                `width:${(100 - lastUsedPct).toFixed(3)}%`,
+                "background:repeating-linear-gradient(45deg,rgba(120,120,120,0.06) 0px,rgba(120,120,120,0.06) 4px,transparent 4px,transparent 8px)",
+                "border-left:2px dashed rgba(150,150,150,0.5)",
+                "pointer-events:none",
+                "z-index:1",
+              ].join(";");
+              mapEl.appendChild(shade);
+
+              // "Beyond boundary" label on the bar
+              const lbl = document.createElement("div");
+              lbl.textContent = "Unwritten";
+              lbl.style.cssText = [
+                "position:absolute",
+                "top:50%",
+                "transform:translateY(-50%)",
+                `left:${Math.min(lastUsedPct + 0.5, 97).toFixed(2)}%`,
+                "font-family:var(--mono)",
+                "font-size:9px",
+                "color:rgba(150,150,150,0.7)",
+                "pointer-events:none",
+                "z-index:2",
+                "white-space:nowrap",
+              ].join(";");
+              mapEl.appendChild(lbl);
+            }
+
+            // Partition boundary ticks
+            pm.partitions.forEach((p) => {
+              const startPct = ((p.start_offset / totalBytes) * 100).toFixed(3);
+              const endPct = ((p.end_offset / totalBytes) * 100).toFixed(3);
+              [startPct, endPct].forEach((pct, i) => {
+                if (parseFloat(pct) <= 0 || parseFloat(pct) >= 99.8) return;
+                const tick = document.createElement("div");
+                tick.title =
+                  i === 0
+                    ? `Partition ${p.index} start: ${p.type_name}`
+                    : `Partition ${p.index} end: ${p.type_name}`;
+                tick.style.cssText = [
+                  "position:absolute",
+                  "top:0",
+                  "bottom:0",
+                  `left:${pct}%`,
+                  "width:1px",
+                  "background:rgba(255,255,255,0.18)",
+                  "pointer-events:none",
+                  "z-index:3",
+                ].join(";");
+                mapEl.appendChild(tick);
+              });
+            });
+          }
+
+          // ── Singleton tooltip ──────────────────────────────────────────────
+          let _dmTip = document.getElementById("_diskMapTip");
+          if (!_dmTip) {
+            _dmTip = document.createElement("div");
+            _dmTip.id = "_diskMapTip";
+            _dmTip.style.cssText = [
+              "position:fixed",
+              "z-index:9999",
+              "pointer-events:none",
+              "display:none",
+              "background:var(--panel)",
+              "border:1px solid var(--border-hi)",
+              "border-radius:5px",
+              "padding:9px 13px",
+              "min-width:210px",
+              "font-family:var(--mono)",
+              "font-size:11px",
+              "color:var(--text)",
+              "box-shadow:0 8px 24px rgba(0,0,0,0.45)",
+              "line-height:1.7",
+            ].join(";");
+            document.body.appendChild(_dmTip);
+          }
+
+          const TYPE_LABELS = {
+            ZERO_WIPE: "0x00 Fill (Zero Wipe)",
+            FF_WIPE: "0xFF Fill",
+            RANDOM_WIPE: "Random Overwrite",
+            MULTI_PASS: "Multi-Pass Wipe",
+            LIKELY_ZERO_WIPE: "Likely 0x00 (Partial)",
+            LIKELY_FF_WIPE: "Likely 0xFF (Partial)",
+            LOW_ENTROPY_SUSPECT: "Low-Entropy Suspect",
+          };
+
+          const CTX_LABELS = {
+            INSIDE_PARTITION: {
+              text: "Inside partition",
+              color: "var(--teal)",
+            },
+            BEYOND_BOUNDARY: {
+              text: "Beyond boundary · likely unwritten",
+              color: "var(--yellow)",
+            },
+            UNKNOWN: { text: "Partition context unknown", color: "var(--dim)" },
+          };
+
+          // ── Wipe region segments ───────────────────────────────────────────
+          d.regions.forEach((r) => {
+            const leftPct = (r.start / totalBytes) * 100;
+            const rightPct = (r.end / totalBytes) * 100;
+            if (rightPct <= leftPct) return;
+
+            let color = typeColors[r.type] || "rgba(200,200,200,0.3)";
+
+            // Regions beyond the boundary get a desaturated look to reflect
+            // the lower forensic confidence
+            const isBeyond = r.boundary_context === "BEYOND_BOUNDARY";
+            if (isBeyond) {
+              color = color.replace(/[\d.]+\)$/, "0.35)");
+            }
+
+            const div = document.createElement("div");
+            div.style.cssText = [
+              "position:absolute",
+              "top:0",
+              "bottom:0",
+              `left:${leftPct.toFixed(4)}%`,
+              `width:${Math.max(0.3, rightPct - leftPct).toFixed(4)}%`,
+              `background:${color}`,
+              "border-radius:1px",
+              "cursor:crosshair",
+              "transition:filter 0.1s",
+              "z-index:4",
+            ].join(";");
+
+            div.addEventListener("mouseenter", (e) => {
+              div.style.filter = "brightness(1.65) saturate(1.3)";
+              const typLabel = TYPE_LABELS[r.type] || r.type.replace(/_/g, " ");
+              const startHex =
+                "0x" + r.start.toString(16).toUpperCase().padStart(10, "0");
+              const endHex =
+                "0x" + r.end.toString(16).toUpperCase().padStart(10, "0");
+              const solidColor = color.replace(/[\d.]+\)$/, "1)");
+              const ctx = CTX_LABELS[r.boundary_context] || CTX_LABELS.UNKNOWN;
+              _dmTip.innerHTML = [
+                `<div style="font-weight:700;color:${solidColor};margin-bottom:4px;">${typLabel}</div>`,
+                `<div style="color:var(--dim);font-size:10px;">Start&nbsp;&nbsp; <span style="color:var(--text-hi)">${startHex}</span></div>`,
+                `<div style="color:var(--dim);font-size:10px;">End&nbsp;&nbsp;&nbsp;&nbsp; <span style="color:var(--text-hi)">${endHex}</span></div>`,
+                `<div style="color:var(--dim);font-size:10px;">Size&nbsp;&nbsp;&nbsp;&nbsp; <span style="color:var(--text-hi)">${formatBytes(r.size)}</span></div>`,
+                `<div style="color:var(--dim);font-size:10px;">Entropy&nbsp; <span style="color:var(--text-hi)">${r.entropy.toFixed(3)}</span></div>`,
+                `<div style="color:var(--dim);font-size:10px;">Conf&nbsp;&nbsp;&nbsp;&nbsp; <span style="color:var(--text-hi)">${Math.round(r.confidence * 100)}%</span></div>`,
+                `<div style="color:var(--dim);font-size:10px;">Blocks&nbsp;&nbsp; <span style="color:var(--text-hi)">${r.blockCount.toLocaleString()}</span></div>`,
+                r.boundary_context
+                  ? `<div style="margin-top:4px;padding-top:4px;border-top:1px solid var(--border);color:${ctx.color};font-size:10px;">⬡ ${ctx.text}</div>`
+                  : "",
+              ].join("");
+              _dmTip.style.display = "block";
+              _positionDiskTip(e);
+            });
+
+            div.addEventListener("mousemove", _positionDiskTip);
+            div.addEventListener("mouseleave", () => {
+              div.style.filter = "";
+              _dmTip.style.display = "none";
+            });
+
+            mapEl.appendChild(div);
+          });
+
+          // ── Labels ─────────────────────────────────────────────────────────
+          const mid = Math.floor(d.totalBlocks / 2) * 512;
+          document.getElementById("diskMapMidLabel").textContent =
+            "0x" + mid.toString(16).toUpperCase().padStart(8, "0");
+          document.getElementById("diskMapEndLabel").textContent =
+            "0x" + totalBytes.toString(16).toUpperCase().padStart(8, "0");
+        });
+      }
+
+      function _positionDiskTip(e) {
+        const tip = document.getElementById("_diskMapTip");
+        if (!tip) return;
+        const pad = 14;
+        const tw = tip.offsetWidth || 220;
+        const th = tip.offsetHeight || 160;
+        let x = e.clientX + pad;
+        let y = e.clientY + pad;
+        if (x + tw > window.innerWidth - pad) x = e.clientX - tw - pad;
+        if (y + th > window.innerHeight - pad) y = e.clientY - th - pad;
+        tip.style.left = x + "px";
+        tip.style.top = y + "px";
       }
 
       // ─────────────────────────────────────────
@@ -2123,61 +3562,107 @@ ${
       // ─────────────────────────────────────────
       function renderPie() {
         const d = scanData;
+
+        // Count blocks per type from d.regions (authoritative post-aggregation source).
+        // Using regions ensures pie, table and disk map are always consistent.
         const counts = {
           ZERO_WIPE: 0,
           FF_WIPE: 0,
           RANDOM_WIPE: 0,
           MULTI_PASS: 0,
+          LIKELY_ZERO_WIPE: 0,
+          LIKELY_FF_WIPE: 0,
+          LOW_ENTROPY_SUSPECT: 0,
         };
-        d.blocks.forEach((b) => {
-          if (counts[b.type] !== undefined) counts[b.type]++;
+        d.regions.forEach((r) => {
+          if (counts[r.type] !== undefined) counts[r.type] += r.blockCount;
         });
 
+        // Total across all 7 types — used for percentages
         const total = Object.values(counts).reduce((a, b) => a + b, 0);
 
+        // Update center label
         document.getElementById("pieCenterVal").textContent =
           total.toLocaleString();
 
-        // Legend
-        const labels = {
+        // Update all 7 legend rows
+        const legendMap = {
           ZERO_WIPE: "leg-zero",
           FF_WIPE: "leg-ff",
           RANDOM_WIPE: "leg-rand",
           MULTI_PASS: "leg-multi",
+          LIKELY_ZERO_WIPE: "leg-partial-zero",
+          LIKELY_FF_WIPE: "leg-partial-ff",
+          LOW_ENTROPY_SUSPECT: "leg-suspect",
         };
-        Object.entries(labels).forEach(([type, id]) => {
-          document.getElementById(id).textContent =
-            counts[type].toLocaleString();
+        Object.entries(legendMap).forEach(([type, id]) => {
+          const countEl = document.getElementById(id);
           const pctEl = document.getElementById(id + "-pct");
+          const n = counts[type] || 0;
+          if (countEl) countEl.textContent = n.toLocaleString();
           if (pctEl)
             pctEl.textContent =
-              total > 0
-                ? "(" + ((counts[type] / total) * 100).toFixed(1) + "%)"
-                : "";
+              total > 0 ? "(" + ((n / total) * 100).toFixed(1) + "%)" : "";
+          // Dim the legend row entirely if this type has zero blocks
+          const row = countEl && countEl.closest(".legend-item");
+          if (row) row.style.opacity = n === 0 ? "0.35" : "1";
         });
 
-        const colors = ["#4d9fff", "#ffcc00", "#ff4d4d", "#c084fc"];
-        const data = [
+        // ── Pie datasets ──────────────────────────────────────────────────────
+        // Two visual rings: strong wipe types (outer/full opacity) and
+        // partial/suspect types (inner, same ring but lighter hue) — achieved
+        // by using a single dataset with 7 slices and two colour "bands":
+        //   Strong  : solid colour  (0x00, 0xFF, Random, Multi-Pass)
+        //   Partial : 50% opacity variant of the same hue
+        const pieColors = [
+          "#4d9fff", // ZERO_WIPE      — blue
+          "#ffcc00", // FF_WIPE         — yellow
+          "#ff4d4d", // RANDOM_WIPE     — red
+          "#c084fc", // MULTI_PASS      — purple
+          "rgba(77,159,255,0.45)", // LIKELY_ZERO    — faded blue
+          "rgba(255,204,0,0.45)", // LIKELY_FF      — faded yellow
+          "rgba(255,170,0,0.45)", // LOW_ENTROPY    — amber
+        ];
+        const pieBorders = [
+          "#4d9fff",
+          "#ffcc00",
+          "#ff4d4d",
+          "#c084fc",
+          "rgba(77,159,255,0.7)",
+          "rgba(255,204,0,0.7)",
+          "rgba(255,170,0,0.7)",
+        ];
+        const pieData = [
           counts.ZERO_WIPE,
           counts.FF_WIPE,
           counts.RANDOM_WIPE,
           counts.MULTI_PASS,
+          counts.LIKELY_ZERO_WIPE,
+          counts.LIKELY_FF_WIPE,
+          counts.LOW_ENTROPY_SUSPECT,
+        ];
+        const pieLabels = [
+          "Zero Fill (0x00)",
+          "FF Fill (0xFF)",
+          "Random Overwrite",
+          "Multi-Pass",
+          "Partial 0x00",
+          "Partial 0xFF",
+          "Suspect",
         ];
 
-        if (pieChartInst) {
-          pieChartInst.destroy();
-        }
+        if (pieChartInst) pieChartInst.destroy();
 
         const ctx = document.getElementById("pieChart").getContext("2d");
         pieChartInst = new Chart(ctx, {
           type: "doughnut",
           data: {
-            labels: ["Zero Fill", "FF Fill", "Random", "Multi-Pass"],
+            labels: pieLabels,
             datasets: [
               {
-                data,
-                backgroundColor: colors.map((c) => c + "cc"),
-                borderColor: colors,
+                data: pieData,
+                backgroundColor: pieColors,
+                borderColor: pieBorders,
                 borderWidth: 1.5,
                 hoverOffset: 6,
               },
@@ -2189,34 +3674,50 @@ ${
             cutout: "72%",
             onHover: (event, elements) => {
               const center = document.getElementById("pieCenter");
-              if (elements.length > 0) {
-                // A segment is hovered — fade out center label so tooltip is unobstructed
-                center.style.opacity = "0";
-                center.style.pointerEvents = "none";
-              } else {
-                // Nothing hovered — restore center label
-                center.style.opacity = "1";
-              }
+              center.style.opacity = elements.length > 0 ? "0" : "1";
+              center.style.pointerEvents = elements.length > 0 ? "none" : "";
             },
             plugins: {
               legend: { display: false },
               tooltip: {
-                backgroundColor: "#14171a",
-                borderColor: "#2a2f36",
+                backgroundColor: _chartColors().tooltipBg,
+                borderColor: _chartColors().tooltipBorder,
                 borderWidth: 1,
-                titleColor: "#e8ecf0",
-                bodyColor: "#c8cdd4",
+                titleColor: _chartColors().tooltipTitle,
+                bodyColor: _chartColors().tooltipBody,
                 titleFont: { family: "JetBrains Mono", size: 11 },
                 bodyFont: { family: "JetBrains Mono", size: 11 },
                 callbacks: {
-                  label: (ctx) =>
-                    ` ${ctx.label}: ${ctx.raw.toLocaleString()} blocks`,
+                  label: (ctx) => {
+                    const pct =
+                      total > 0
+                        ? " (" + ((ctx.raw / total) * 100).toFixed(1) + "%)"
+                        : "";
+                    return ` ${ctx.label}: ${ctx.raw.toLocaleString()} blocks${pct}`;
+                  },
                 },
               },
             },
             animation: { animateRotate: true, duration: 800 },
           },
         });
+      }
+
+      // ─────────────────────────────────────────
+      // CHART THEME HELPER — reads live CSS vars so charts respect light/dark mode
+      // ─────────────────────────────────────────
+      function _chartColors() {
+        const s = getComputedStyle(document.documentElement);
+        const v = (name) => s.getPropertyValue(name).trim();
+        return {
+          grid: v("--border") || "#1e2227",
+          tickText: v("--text-lo") || "#4a5260",
+          axisTitle: v("--dim") || "#5c636e",
+          tooltipBg: v("--panel") || "#14171a",
+          tooltipBorder: v("--border-hi") || "#2a2f36",
+          tooltipTitle: v("--text-hi") || "#e8ecf0",
+          tooltipBody: v("--text") || "#c8cdd4",
+        };
       }
 
       // ─────────────────────────────────────────
@@ -2272,7 +3773,7 @@ ${
             scales: {
               x: {
                 ticks: {
-                  color: "#4a5260",
+                  color: _chartColors().tickText,
                   font: { family: "JetBrains Mono", size: 9 },
                   maxTicksLimit: 10,
                   callback: (v, i) => {
@@ -2280,11 +3781,11 @@ ${
                     return block ? (block.id / 1000).toFixed(0) + "K" : "";
                   },
                 },
-                grid: { color: "#1e2227", drawBorder: false },
+                grid: { color: _chartColors().grid, drawBorder: false },
                 title: {
                   display: true,
                   text: "Block Offset",
-                  color: "#5c636e",
+                  color: _chartColors().axisTitle,
                   font: { family: "JetBrains Mono", size: 10 },
                 },
               },
@@ -2292,15 +3793,15 @@ ${
                 min: 0,
                 max: 8.2,
                 ticks: {
-                  color: "#4a5260",
+                  color: _chartColors().tickText,
                   font: { family: "JetBrains Mono", size: 9 },
                   stepSize: 1,
                 },
-                grid: { color: "#1e2227", drawBorder: false },
+                grid: { color: _chartColors().grid, drawBorder: false },
                 title: {
                   display: true,
                   text: "Shannon Entropy (bits)",
-                  color: "#5c636e",
+                  color: _chartColors().axisTitle,
                   font: { family: "JetBrains Mono", size: 10 },
                 },
               },
@@ -2308,11 +3809,11 @@ ${
             plugins: {
               legend: { display: false },
               tooltip: {
-                backgroundColor: "#14171a",
-                borderColor: "#2a2f36",
+                backgroundColor: _chartColors().tooltipBg,
+                borderColor: _chartColors().tooltipBorder,
                 borderWidth: 1,
-                titleColor: "#e8ecf0",
-                bodyColor: "#c8cdd4",
+                titleColor: _chartColors().tooltipTitle,
+                bodyColor: _chartColors().tooltipBody,
                 titleFont: { family: "JetBrains Mono", size: 11 },
                 bodyFont: { family: "JetBrains Mono", size: 11 },
                 callbacks: {
@@ -2341,7 +3842,7 @@ ${
       function populateTable(data) {
         const body = document.getElementById("regionsBody");
         if (!data.length) {
-          body.innerHTML = `<tr><td colspan="8"><div class="empty-state">
+          body.innerHTML = `<tr><td colspan="9"><div class="empty-state">
       <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
       No regions match the current filter</div></td></tr>`;
           return;
@@ -2355,6 +3856,9 @@ ${
                 FF_WIPE: "badge-ff",
                 RANDOM_WIPE: "badge-random",
                 MULTI_PASS: "badge-multi",
+                LIKELY_ZERO_WIPE: "badge-partial-zero",
+                LIKELY_FF_WIPE: "badge-partial-ff",
+                LOW_ENTROPY_SUSPECT: "badge-suspect",
               }[r.type] || "";
             const badgeLabel =
               {
@@ -2362,7 +3866,10 @@ ${
                 FF_WIPE: "0xFF FILL",
                 RANDOM_WIPE: "RANDOM",
                 MULTI_PASS: "MULTI-PASS",
-              }[r.type] || r.type;
+                LIKELY_ZERO_WIPE: "PARTIAL 0x00",
+                LIKELY_FF_WIPE: "PARTIAL 0xFF",
+                LOW_ENTROPY_SUSPECT: "SUSPECT",
+              }[r.type] || r.type.replace(/_/g, " ");
             const confClass =
               r.confidence >= 0.9
                 ? "conf-high"
@@ -2371,7 +3878,16 @@ ${
                   : "conf-low";
             const confPct = Math.round(r.confidence * 100);
 
-            return `<tr onclick="selectBlockFromRegion(${r.id - 1})" style="cursor:pointer">
+            const ctxBadge = (() => {
+              const c = r.boundary_context;
+              if (!c || c === "UNKNOWN")
+                return `<span style="color:var(--dim);font-size:10px;">—</span>`;
+              if (c === "BEYOND_BOUNDARY")
+                return `<span style="display:inline-block;padding:2px 6px;border-radius:3px;font-size:9px;font-weight:600;background:rgba(255,204,0,0.15);color:var(--yellow);border:1px solid rgba(255,204,0,0.3);white-space:nowrap;">BEYOND BOUNDARY</span>`;
+              return `<span style="display:inline-block;padding:2px 6px;border-radius:3px;font-size:9px;font-weight:600;background:rgba(77,220,200,0.12);color:var(--teal);border:1px solid rgba(77,220,200,0.25);white-space:nowrap;">INSIDE PARTITION</span>`;
+            })();
+
+            return `<tr onclick="selectBlockFromRegion(${r.start})" style="cursor:pointer">
       <td class="td-offset">${r.id}</td>
       <td class="td-offset">0x${r.start.toString(16).padStart(10, "0").toUpperCase()}</td>
       <td class="td-offset">0x${r.end.toString(16).padStart(10, "0").toUpperCase()}</td>
@@ -2385,6 +3901,7 @@ ${
         </div>
       </td>
       <td>${r.blockCount.toLocaleString()}</td>
+      <td>${ctxBadge}</td>
     </tr>`;
           })
           .join("");
@@ -2438,15 +3955,16 @@ ${
         populateTable(sorted);
       }
 
-      function selectBlockFromRegion(regionIdx) {
+      function selectBlockFromRegion(regionStart) {
         if (!scanData) return;
-        const r = scanData.regions[regionIdx];
-        if (!r) return;
-        const blockId = Math.floor(r.start / 512);
-        switchTab("raw", document.querySelectorAll(".tab-btn")[2]);
-        setTimeout(() => {
-          jumpToBlock(blockId);
-        }, 100);
+        // Derive block id directly from the region's byte start offset
+        const blockId = Math.floor(regionStart / 512);
+        // Locate the Raw Data tab by label text — immune to tab reordering
+        const rawTabBtn = Array.from(
+          document.querySelectorAll(".tab-btn"),
+        ).find((b) => b.textContent.trim() === "Raw Data");
+        if (rawTabBtn) switchTab("raw", rawTabBtn);
+        setTimeout(() => jumpToBlock(blockId), 100);
       }
 
       // ─────────────────────────────────────────
@@ -2469,7 +3987,7 @@ ${
         renderHexView(currentBlockIdx);
       }
 
-      function renderHexView(blockId) {
+      async function renderHexView(blockId) {
         if (!scanData) return;
         const block = scanData.blocks[blockId];
         if (!block) return;
@@ -2504,23 +4022,55 @@ ${
               ? "var(--blue)"
               : "var(--text-hi)";
 
-        // Simulate hex bytes based on block type
+        // ── Try to fetch real block bytes from backend ─────────────────────────
+        // Backend must expose GET /block/<session_id>/<block_id> returning
+        // { bytes: [0..255, ...] } (512 values).  Falls back to statistical
+        // approximation if the endpoint is absent or returns an error.
+        let realBytes = null;
+        if (SESSION_ID) {
+          try {
+            const r = await fetch(`${API_BASE}/block/${SESSION_ID}/${blockId}`);
+            if (r.ok) {
+              const data = await r.json();
+              if (Array.isArray(data.bytes) && data.bytes.length === 512)
+                realBytes = data.bytes;
+            }
+          } catch (_) {
+            /* endpoint not available — fall through to approximation */
+          }
+        }
+
+        const isApprox = realBytes === null;
+
+        // ── Build rows (24 rows × 16 bytes = 384 bytes shown; full 512 fits 32 rows but 24 is readable) ──
         const rows = [];
-        for (let row = 0; row < 24; row++) {
+        // Show approximation notice if real data unavailable
+        if (isApprox) {
+          rows.push(
+            `<div style="padding:6px 0 10px; font-size:10px; color:var(--yellow); letter-spacing:.04em;">` +
+              `⚠ STATISTICAL APPROXIMATION — backend /block endpoint not available. ` +
+              `Bytes are generated from block type &amp; entropy; they do not reflect actual disk content.</div>`,
+          );
+        }
+        for (let row = 0; row < 32; row++) {
           const offset = blockId * 512 + row * 16;
           const hexAddr =
             "0x" + offset.toString(16).padStart(10, "0").toUpperCase();
           let hexBytes = "";
           for (let col = 0; col < 16; col++) {
             let byte;
-            if (block.type === "ZERO_WIPE") byte = 0x00;
-            else if (block.type === "FF_WIPE") byte = 0xff;
-            else if (block.type === "RANDOM_WIPE")
-              byte = Math.floor(Math.random() * 256);
-            else if (block.type === "MULTI_PASS")
-              byte = row % 2 === 0 ? 0x00 : 0xff;
-            else byte = Math.floor(Math.random() * 128) + 32;
-
+            if (realBytes) {
+              byte = realBytes[row * 16 + col];
+            } else {
+              // Statistical approximation — visually representative, not real data
+              if (block.type === "ZERO_WIPE") byte = 0x00;
+              else if (block.type === "FF_WIPE") byte = 0xff;
+              else if (block.type === "RANDOM_WIPE")
+                byte = Math.floor(Math.random() * 256);
+              else if (block.type === "MULTI_PASS")
+                byte = row % 2 === 0 ? 0x00 : 0xff;
+              else byte = Math.floor(Math.random() * 128) + 32;
+            }
             const hex = byte.toString(16).padStart(2, "0").toUpperCase();
             let cls = "h-norm";
             if (byte === 0x00) cls = "h-zero";
@@ -2534,31 +4084,40 @@ ${
         }
         document.getElementById("hexScroll").innerHTML = rows.join("");
 
-        renderHistogram(block);
+        renderHistogram(block, realBytes);
         document.getElementById("histOverlay").classList.add("hidden");
       }
 
-      function renderHistogram(block) {
-        // Build simulated byte frequency
+      function renderHistogram(block, realBytes) {
+        // Build byte frequency — from real bytes if available, otherwise statistical approximation
         const freq = new Array(256).fill(0);
-        if (block.type === "ZERO_WIPE") {
-          freq[0] = 4090;
-          for (let i = 1; i < 256; i++) freq[i] = Math.floor(Math.random() * 2);
-        } else if (block.type === "FF_WIPE") {
-          freq[255] = 4088;
-          for (let i = 0; i < 255; i++) freq[i] = Math.floor(Math.random() * 2);
-        } else if (block.type === "RANDOM_WIPE") {
-          for (let i = 0; i < 256; i++)
-            freq[i] = 14 + Math.floor(Math.random() * 6);
-        } else if (block.type === "MULTI_PASS") {
-          freq[0] = 2040;
-          freq[255] = 2040;
-          for (let i = 1; i < 255; i++) freq[i] = Math.floor(Math.random() * 2);
+        if (realBytes && realBytes.length === 512) {
+          // Real data: count actual byte frequencies
+          realBytes.forEach((b) => freq[b]++);
         } else {
-          for (let i = 32; i < 127; i++)
-            freq[i] = 15 + Math.floor(Math.random() * 25);
-          freq[10] = 80;
-          freq[32] = 120;
+          // Statistical approximation labelled in hex view
+          if (block.type === "ZERO_WIPE") {
+            freq[0] = 490;
+            for (let i = 1; i < 256; i++)
+              freq[i] = Math.floor(Math.random() * 2);
+          } else if (block.type === "FF_WIPE") {
+            freq[255] = 490;
+            for (let i = 0; i < 255; i++)
+              freq[i] = Math.floor(Math.random() * 2);
+          } else if (block.type === "RANDOM_WIPE") {
+            for (let i = 0; i < 256; i++)
+              freq[i] = 1 + Math.floor(Math.random() * 3);
+          } else if (block.type === "MULTI_PASS") {
+            freq[0] = 245;
+            freq[255] = 245;
+            for (let i = 1; i < 255; i++)
+              freq[i] = Math.floor(Math.random() * 2);
+          } else {
+            for (let i = 32; i < 127; i++)
+              freq[i] = 2 + Math.floor(Math.random() * 4);
+            freq[10] = 10;
+            freq[32] = 15;
+          }
         }
 
         const colors = Array.from({ length: 256 }, (_, i) => {
@@ -2593,7 +4152,7 @@ ${
             scales: {
               x: {
                 ticks: {
-                  color: "#4a5260",
+                  color: _chartColors().tickText,
                   font: { family: "JetBrains Mono", size: 8 },
                   maxTicksLimit: 16,
                   callback: (v, i) =>
@@ -2606,20 +4165,20 @@ ${
               },
               y: {
                 ticks: {
-                  color: "#4a5260",
+                  color: _chartColors().tickText,
                   font: { family: "JetBrains Mono", size: 9 },
                 },
-                grid: { color: "#1e2227", drawBorder: false },
+                grid: { color: _chartColors().grid, drawBorder: false },
               },
             },
             plugins: {
               legend: { display: false },
               tooltip: {
-                backgroundColor: "#14171a",
-                borderColor: "#2a2f36",
+                backgroundColor: _chartColors().tooltipBg,
+                borderColor: _chartColors().tooltipBorder,
                 borderWidth: 1,
-                titleColor: "#e8ecf0",
-                bodyColor: "#c8cdd4",
+                titleColor: _chartColors().tooltipTitle,
+                bodyColor: _chartColors().tooltipBody,
                 titleFont: { family: "JetBrains Mono", size: 11 },
                 bodyFont: { family: "JetBrains Mono", size: 11 },
                 callbacks: {
@@ -2700,11 +4259,17 @@ ${
         return (b / (1024 * 1024 * 1024)).toFixed(2) + " GB";
       }
 
+      // ── Case details from URL params ───────────────────────────────────────
+      let CASE_DETAILS = {};
+
       // Populate nav bar from URL params passed by upload_module.html
       (function populateNav() {
         const p = new URLSearchParams(window.location.search);
-        if (p.get("session"))
+        if (p.get("session")) {
           document.getElementById("navSession").textContent = p.get("session");
+          const s2 = document.getElementById("navSession2");
+          if (s2) s2.textContent = p.get("session");
+        }
         if (p.get("file"))
           document.getElementById("navFilename").textContent = p.get("file");
         if (p.get("size") || p.get("sha256")) {
@@ -2715,7 +4280,719 @@ ${
           const meta = document.getElementById("navFilemeta");
           if (meta) meta.textContent = `${size} · SHA-256: ${hash}`;
         }
+
+        // Case details — stored for scan POST body and report rendering
+        CASE_DETAILS = {
+          examiner: p.get("examiner") || "",
+          case_id: p.get("case_id") || "",
+          agency: p.get("agency") || "",
+          device: p.get("device") || "",
+          notes: p.get("notes") || "",
+        };
+
+        // Show case info banner if any details were provided
+        if (
+          CASE_DETAILS.examiner ||
+          CASE_DETAILS.case_id ||
+          CASE_DETAILS.agency
+        ) {
+          const banner = document.getElementById("caseDetailsBanner");
+          if (banner) {
+            const parts = [];
+            if (CASE_DETAILS.case_id)
+              parts.push(`Case: <strong>${CASE_DETAILS.case_id}</strong>`);
+            if (CASE_DETAILS.examiner)
+              parts.push(`Examiner: <strong>${CASE_DETAILS.examiner}</strong>`);
+            if (CASE_DETAILS.agency)
+              parts.push(`Agency: <strong>${CASE_DETAILS.agency}</strong>`);
+            banner.innerHTML = parts.join(" &nbsp;·&nbsp; ");
+            banner.style.display = "flex";
+          }
+        }
       })();
+
+      // ─────────────────────────────────────────
+      // FORENSIC REPORT RENDERER
+      // ─────────────────────────────────────────
+      function renderForensicReport(rawJson) {
+        const rpt = rawJson.forensic_report;
+        // Note: this function is only called from finalizeScan() inside
+        // `if (_rawApiJson)` — the guard below catches a missing forensic_report
+        // field specifically (backend may omit it on partial results)
+        if (!rpt) {
+          console.warn(
+            "[WipeTrace] forensic_report field missing from API response",
+          );
+          return;
+        }
+
+        document.getElementById("reportEmpty").style.display = "none";
+        document.getElementById("reportContent").style.display = "block";
+
+        // ── Pull live stats for dynamic enrichment ─────────────────────────
+        const liveStats = rawJson.stats || {};
+        const liveBlocks = (rawJson.blocks || []).length;
+        const liveRegions = rawJson.regions || [];
+        const intentScore = liveStats.intent_score || 0;
+        const verdict =
+          liveStats.verdict || rpt.metrics?.verdict || "NEGLIGIBLE";
+        const totalBlocks = liveStats.total_blocks || liveBlocks;
+        const suspBlocks = liveStats.suspicious_blocks || 0;
+        const coveragePct = liveStats.coverage_pct || 0;
+        const dominantType = (liveStats.dominant_type || "NORMAL").replace(
+          /_/g,
+          " ",
+        );
+        const totalBytes = totalBlocks * 512;
+
+        // Compute type breakdown for richer commentary
+        const typeCount = {};
+        liveRegions.forEach((r) => {
+          typeCount[r.type] = (typeCount[r.type] || 0) + 1;
+        });
+        const hasMultiPass = (typeCount["MULTI_PASS"] || 0) > 0;
+        const hasRandom = (typeCount["RANDOM_WIPE"] || 0) > 0;
+        const hasZero = (typeCount["ZERO_WIPE"] || 0) > 0;
+        const hasFf = (typeCount["FF_WIPE"] || 0) > 0;
+        const regionCount = liveRegions.length;
+
+        // Verdict badge
+        const verdictColors = {
+          HIGH: "background:#ff4d4d22;color:#ff4d4d;border:1px solid #ff4d4d44",
+          MEDIUM:
+            "background:#ffcc0022;color:#ffcc00;border:1px solid #ffcc0044",
+          LOW: "background:#4d9fff22;color:#4d9fff;border:1px solid #4d9fff44",
+          NEGLIGIBLE:
+            "background:#3a404822;color:#5c636e;border:1px solid #3a4048",
+        };
+        document.getElementById("reportVerdictBadge").style.cssText =
+          verdictColors[verdict] || verdictColors.NEGLIGIBLE;
+        document.getElementById("reportVerdictBadge").textContent = verdict;
+        document.getElementById("reportTimestamp").textContent = new Date(
+          rpt.generated_at || Date.now(),
+        ).toLocaleString();
+
+        // ── Dynamic executive summary ────────────────────────────────────────
+        // Combine backend summary with live computed context
+        const backendSummary = rpt.executive_summary || "";
+        let dynamicSummary = "";
+        if (verdict === "HIGH") {
+          dynamicSummary =
+            `Forensic examination of a ${formatBytes(totalBytes)} disk image detected ${regionCount} wipe region${regionCount !== 1 ? "s" : ""} covering ${coveragePct.toFixed(1)}% of imaged space (${suspBlocks.toLocaleString()} blocks). ` +
+            (hasMultiPass
+              ? "Multi-pass overwriting patterns identified — consistent with NIST SP 800-88 or DoD 5220.22-M compliant sanitisation tools. "
+              : "") +
+            (hasRandom
+              ? "CSPRNG-seeded random overwrites detected — indicative of software such as DBAN, Eraser, or BCWipe. "
+              : "") +
+            (hasZero && hasFf
+              ? "Combined zero-fill and 0xFF patterns suggest alternating-pass wipe tool usage. "
+              : "") +
+            `Intent score: ${intentScore}/100. ${backendSummary}`;
+        } else if (verdict === "MEDIUM") {
+          dynamicSummary =
+            `Analysis of ${formatBytes(totalBytes)} image identified ${regionCount} suspicious region${regionCount !== 1 ? "s" : ""} with ${coveragePct.toFixed(1)}% disk coverage. ` +
+            `Primary signature: ${dominantType}. Findings suggest selective rather than full-disk overwriting. ` +
+            `${backendSummary}`;
+        } else if (verdict === "LOW") {
+          dynamicSummary =
+            `Examination of ${formatBytes(totalBytes)} image (${totalBlocks.toLocaleString()} blocks) found limited wipe evidence — ${regionCount} region${regionCount !== 1 ? "s" : ""} at ${coveragePct.toFixed(1)}% coverage. ` +
+            `Elevated entropy blocks likely reflect compressed or encrypted data rather than deliberate sanitisation. ` +
+            `${backendSummary}`;
+        } else {
+          dynamicSummary =
+            backendSummary ||
+            `No significant wipe artefacts detected across ${formatBytes(totalBytes)} of imaged disk space. Disk content consistent with normal filesystem activity.`;
+        }
+        document.getElementById("reportExecSummary").textContent =
+          dynamicSummary;
+
+        // ── Case details strip ───────────────────────────────────────────────
+        const caseEl = document.getElementById("reportCaseDetails");
+        if (caseEl) {
+          const caseFields = [
+            { label: "Examiner", val: CASE_DETAILS.examiner },
+            { label: "Case ID", val: CASE_DETAILS.case_id },
+            { label: "Agency", val: CASE_DETAILS.agency },
+            { label: "Device", val: CASE_DETAILS.device },
+            { label: "Notes", val: CASE_DETAILS.notes },
+            { label: "Generated", val: new Date().toLocaleString() },
+          ].filter((f) => f.val);
+          if (caseFields.length) {
+            caseEl.style.display = "grid";
+            caseEl.innerHTML = caseFields
+              .map(
+                (f) =>
+                  `<div><div style="font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--dim);margin-bottom:2px;">${f.label}</div>
+               <div style="font-size:11px;color:var(--text-hi);font-family:var(--mono);">${f.val}</div></div>`,
+              )
+              .join("");
+          }
+        }
+
+        // Metrics
+        const m = rpt.metrics || {};
+        const metricsHTML = [
+          { label: "Intent Score", val: intentScore + "/100" },
+          {
+            label: "Coverage",
+            val: (coveragePct || m.coverage_pct || 0).toFixed(1) + "%",
+          },
+          { label: "Regions", val: regionCount || m.regions_found || 0 },
+          { label: "Dominant Type", val: dominantType },
+          { label: "Disk Size", val: formatBytes(totalBytes) },
+          { label: "Suspicious Blk", val: suspBlocks.toLocaleString() },
+        ]
+          .map(
+            (c) =>
+              `<div class="report-metric-card"><div class="report-metric-val">${c.val}</div><div class="report-metric-label">${c.label}</div></div>`,
+          )
+          .join("");
+        document.getElementById("reportMetrics").innerHTML = metricsHTML;
+
+        // ML section
+        const ml = rpt.ml_analysis || {};
+        const mlLive = rawJson.ml_analysis || {};
+        let mlDesc = ml.description || "";
+        if (mlLive.available && mlLive.overrides != null) {
+          mlDesc =
+            `ML ensemble (${mlLive.model_version || "v1"}) analysed ${(mlLive.blocks_analyzed || 0).toLocaleString()} blocks, applying ${mlLive.overrides} override${mlLive.overrides !== 1 ? "s" : ""} and reducing ${mlLive.false_positive_reductions || 0} false positive${(mlLive.false_positive_reductions || 0) !== 1 ? "s" : ""}. ` +
+            mlDesc;
+        }
+        document.getElementById("reportMlBody").textContent =
+          mlDesc || "ML classification not available.";
+        document.getElementById("reportMlMethod").textContent =
+          ml.methodology || "";
+
+        // Pattern analysis — inject type-specific commentary
+        const pa = rpt.pattern_analysis || {};
+        let patternText = pa.interpretation || "";
+        const patternExtra = [];
+        if (hasMultiPass)
+          patternExtra.push(
+            `${typeCount["MULTI_PASS"]} multi-pass region${typeCount["MULTI_PASS"] !== 1 ? "s" : ""} — alternating entropy bands consistent with DoD/NIST wipe standards`,
+          );
+        if (hasRandom)
+          patternExtra.push(
+            `${typeCount["RANDOM_WIPE"]} CSPRNG region${typeCount["RANDOM_WIPE"] !== 1 ? "s" : ""} — near-uniform byte distribution (H ≥ 7.8 bits/byte)`,
+          );
+        if (hasZero)
+          patternExtra.push(
+            `${typeCount["ZERO_WIPE"]} zero-fill region${typeCount["ZERO_WIPE"] !== 1 ? "s" : ""} — byte dominance 0x00 ≥ 99.5%`,
+          );
+        if (hasFf)
+          patternExtra.push(
+            `${typeCount["FF_WIPE"]} 0xFF region${typeCount["FF_WIPE"] !== 1 ? "s" : ""} — flash/SSD erase-state signature`,
+          );
+        if (patternExtra.length)
+          patternText +=
+            (patternText ? " " : "") + patternExtra.join("; ") + ".";
+        document.getElementById("reportPatternBody").textContent =
+          patternText || "—";
+
+        const tools = pa.tool_attribution || [];
+        document.getElementById("reportToolAttrib").innerHTML =
+          tools.length > 0
+            ? '<div style="font-size:11px; color:var(--dim); margin-bottom:5px;">Likely tools:</div><div class="tag-list">' +
+              tools.map((t) => `<span class="tag">${t}</span>`).join("") +
+              "</div>"
+            : "";
+
+        // Reliability
+        const rel = rpt.reliability || {};
+        const relColors = {
+          HIGH: "background:var(--teal-lo);color:var(--teal);",
+          MEDIUM: "background:var(--yellow-lo);color:var(--yellow);",
+          LOW: "background:var(--red-lo);color:var(--red);",
+        };
+        const rb = document.getElementById("reportReliabilityBadge");
+        rb.textContent = rel.reliability_level || "—";
+        rb.style.cssText = relColors[rel.reliability_level] || "";
+        document.getElementById("reportReliabilityDesc").textContent =
+          rel.description || "—";
+        const caveats = rel.caveats || [];
+        document.getElementById("reportCaveats").innerHTML =
+          caveats.length > 0
+            ? '<div style="font-size:11px; color:var(--dim); margin-bottom:5px; margin-top:10px;">Caveats:</div>' +
+              caveats
+                .map(
+                  (c) =>
+                    `<div class="caveat-item"><span class="caveat-dot">⚠</span><span>${c}</span></div>`,
+                )
+                .join("")
+            : "";
+
+        // Conclusions — enrich with live data
+        const conc = rpt.conclusions || {};
+        let forensicOpinion = conc.forensic_opinion || "—";
+        if (verdict === "HIGH" && regionCount > 0) {
+          forensicOpinion =
+            `Based on analysis of ${totalBlocks.toLocaleString()} 512-byte blocks, ${regionCount} wipe region${regionCount !== 1 ? "s" : ""} totalling approximately ${formatBytes((coveragePct / 100) * totalBytes)} were identified. ` +
+            (hasMultiPass
+              ? "The presence of multi-pass alternating patterns meets the threshold for intentional evidence destruction under ACPO Good Practice Guide v5. "
+              : "") +
+            forensicOpinion;
+        }
+        document.getElementById("reportConclusion").textContent =
+          forensicOpinion;
+        document.getElementById("reportConfidenceNote").textContent =
+          conc.confidence_note || "—";
+
+        // Actions
+        const acts = rpt.recommended_actions || [];
+        const actColors = {
+          IMMEDIATE:
+            "background:rgba(255,60,60,0.18);color:#ff4444;border-color:rgba(255,60,60,0.4);",
+          HIGH: "background:var(--red-lo);color:var(--red);",
+          MEDIUM: "background:var(--yellow-lo);color:var(--yellow);",
+          LOW: "background:var(--accent-lo);color:var(--accent);",
+        };
+        document.getElementById("reportActions").innerHTML = acts
+          .map(
+            (a) =>
+              `<div class="action-item">
+            <span class="action-priority" style="${actColors[a.priority] || ""}">${a.priority}</span>
+            <div><div style="font-weight:600; color:var(--text-hi); margin-bottom:3px;">${a.action}</div><div style="color:var(--text); line-height:1.6;">${a.detail}</div></div>
+          </div>`,
+          )
+          .join("");
+
+        // Examiner note — make it scan-specific
+        const baseNote = rpt.examiner_note || "";
+        const mlNote = mlLive.available
+          ? `ML ensemble (${mlLive.model_version || "v1"}): ${mlLive.overrides || 0} override(s). `
+          : "ML analysis unavailable. ";
+        document.getElementById("reportExaminerNote").textContent =
+          mlNote +
+          (baseNote ||
+            `Analysis performed on ${new Date().toLocaleDateString()}. Results based on Shannon entropy, byte uniformity, and ML ensemble classification.`);
+      }
+
+      // ─────────────────────────────────────────
+      // CHAIN OF CUSTODY RENDERER
+      // ─────────────────────────────────────────
+      // ── Plain-English event descriptions (Fix 6) ──────────────────────────
+      const CUSTODY_EVENT_EXPLAIN = {
+        SYSTEM_INIT:
+          "WipeTrace started a new session and created this audit log. Think of it as opening a new evidence envelope and writing the date on it.",
+        ACQUISITION:
+          "The disk image file was received and its SHA-256 fingerprint was recorded. This hash is the forensic seal — if even one byte changes later, the hash will no longer match.",
+        HASH_INITIAL:
+          "A fresh SHA-256 was computed directly from the stored image file to confirm it arrived intact. This is the baseline against which all future hashes are compared.",
+        HASH_VERIFY:
+          "The image was re-hashed and the result was compared against the original acquisition hash. A match confirms the evidence has not been modified.",
+        SCAN_START:
+          "The automated wipe-detection engine began reading the disk image block by block. The total block count was logged so any later discrepancy can be detected.",
+        SCAN_PROGRESS:
+          "A progress checkpoint — the engine recorded how many blocks had been analysed at this point. Logged periodically so the audit trail shows the scan was not interrupted.",
+        SCAN_COMPLETE:
+          "The scan finished. The intent score, verdict, and number of detected regions were sealed into the audit log at this moment.",
+        ML_ANALYSIS:
+          "The machine-learning classifier reviewed suspicious blocks and applied additional confidence adjustments. Any automated overrides to the rule-based classifications were recorded here.",
+        REPORT_GENERATED:
+          "The forensic report was written to disk. The output file path was recorded so it can be verified against the same copy that is submitted as evidence.",
+        EXPORT:
+          "The analysis results were exported. The format and destination were logged so the chain of custody covers any copies made of this report.",
+        INTEGRITY_BROKEN:
+          "⚠ A tamper event was detected — one or more entry hashes no longer match their expected values. This means the audit log was modified after it was created.",
+      };
+
+      const CUSTODY_EVENT_COLORS = {
+        SYSTEM_INIT: "#5c636e",
+        ACQUISITION: "var(--accent)",
+        HASH_INITIAL: "var(--teal)",
+        HASH_VERIFY: "var(--teal)",
+        SCAN_START: "var(--blue)",
+        SCAN_PROGRESS: "var(--blue)",
+        SCAN_COMPLETE: "var(--teal)",
+        ML_ANALYSIS: "var(--purple)",
+        REPORT_GENERATED: "var(--accent)",
+        EXPORT: "var(--yellow)",
+        INTEGRITY_BROKEN: "var(--red)",
+      };
+
+      async function renderCustodyChain(rawJson) {
+        const coc = rawJson.chain_of_custody;
+        if (!coc) {
+          console.warn(
+            "[WipeTrace] chain_of_custody field missing from API response",
+          );
+          return;
+        }
+
+        document.getElementById("custodyEmpty").style.display = "none";
+        document.getElementById("custodyContent").style.display = "block";
+
+        // Integrity badge — start pending, resolve via /verify
+        const intBadge = document.getElementById("custodyIntegrityBadge");
+        intBadge.textContent = "⟳ VERIFYING…";
+        intBadge.style.cssText =
+          "margin-left:auto;font-size:11px;padding:3px 10px;border-radius:3px;font-weight:700;letter-spacing:.05em;" +
+          "background:var(--panel2);color:var(--dim);border:1px solid var(--border);";
+
+        // Summary cards — merge API examiner with any case details from URL params
+        const displayExaminer =
+          CASE_DETAILS.examiner || coc.examiner || "WipeTrace Analysis System";
+        const cards = [
+          { label: "Session ID", val: coc.session_id || "—" },
+          { label: "Total Events", val: coc.total_entries || 0 },
+          {
+            label: "Last Event",
+            val: (coc.last_event || "—").replace(/_/g, " "),
+          },
+          { label: "Examiner", val: displayExaminer },
+          { label: "Case ID", val: CASE_DETAILS.case_id || "—" },
+          { label: "Agency", val: CASE_DETAILS.agency || "—" },
+          {
+            label: "Created",
+            val: coc.created_at
+              ? new Date(coc.created_at).toLocaleString()
+              : "—",
+          },
+          {
+            label: "Last Updated",
+            val: coc.last_updated
+              ? new Date(coc.last_updated).toLocaleString()
+              : "—",
+          },
+        ];
+        document.getElementById("custodySummaryCards").innerHTML = cards
+          .map(
+            (c) =>
+              `<div class="custody-card"><div class="custody-card-label">${c.label}</div><div class="custody-card-val">${c.val}</div></div>`,
+          )
+          .join("");
+
+        // Final hash — full, no truncation
+        document.getElementById("custodyFinalHash").textContent =
+          coc.final_hash || "—";
+
+        // Events timeline
+        const events = coc.events || [];
+        document.getElementById("custodyTimeline").innerHTML = events
+          .map((e) => {
+            const dotColor = CUSTODY_EVENT_COLORS[e.type] || "#5c636e";
+            const typeLabel = (e.type || "").replace(/_/g, " ");
+            const explain = CUSTODY_EVENT_EXPLAIN[e.type] || "";
+            const ts = e.ts ? new Date(e.ts).toLocaleString() : "—";
+
+            // Hash block — always show full hashes
+            let hashRows = "";
+            if (e.hash) {
+              hashRows += `<div class="custody-hash-label">Entry hash</div>
+                         <div class="custody-hash-val" title="SHA-256 of this event's content linked to the previous entry">${e.hash}</div>`;
+            }
+            if (e.prev_hash && e.prev_hash !== "GENESIS") {
+              hashRows += `<div class="custody-hash-label">Prev hash</div>
+                         <div class="custody-hash-val" title="Hash of the preceding entry — links this event to the chain">${e.prev_hash}</div>`;
+            }
+            if (e.sha256_evidence) {
+              hashRows += `<div class="custody-hash-label">Evidence</div>
+                         <div class="custody-hash-val evidence" title="SHA-256 of the disk image at this point in the chain">${e.sha256_evidence}</div>`;
+            }
+
+            // Metadata extras (examiner, model version etc.)
+            let metaHtml = "";
+            if (
+              e.examiner &&
+              e.examiner !== (coc.examiner || "WipeTrace Analysis System")
+            ) {
+              metaHtml += `<span class="custody-event-meta">Examiner: ${e.examiner}</span>`;
+            }
+            if (e.metadata) {
+              const m = e.metadata;
+              if (m.model_version)
+                metaHtml += `<span class="custody-event-meta"> · ML model: ${m.model_version}</span>`;
+              if (m.overrides != null)
+                metaHtml += `<span class="custody-event-meta"> · Overrides: ${m.overrides}</span>`;
+            }
+
+            return `<div class="custody-event">
+            <div class="custody-event-header">
+              <div class="custody-event-dot" style="background:${dotColor};"></div>
+              <div class="custody-event-seq">#${e.seq}</div>
+              <div class="custody-event-type" style="color:${dotColor};">${typeLabel}</div>
+              <div class="custody-event-time">${ts}</div>
+            </div>
+            <div class="custody-event-body">
+              <div class="custody-event-desc"><strong>${e.desc || ""}</strong></div>
+              ${explain ? `<div class="custody-event-desc" style="color:var(--dim);font-size:10px;">${explain}</div>` : ""}
+              ${metaHtml}
+              ${hashRows ? `<div class="custody-event-hash-block">${hashRows}</div>` : ""}
+            </div>
+          </div>`;
+          })
+          .join("");
+
+        // Call /verify for real integrity status
+        if (!SESSION_ID) return;
+        try {
+          const res = await fetch(`${API_BASE}/verify/${SESSION_ID}`);
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const vdata = await res.json();
+          if (vdata.valid) {
+            intBadge.textContent = "✓ CHAIN INTACT";
+            intBadge.style.cssText =
+              "margin-left:auto;font-size:11px;padding:3px 10px;border-radius:3px;font-weight:700;letter-spacing:.05em;" +
+              "background:var(--teal-lo);color:var(--teal);border:1px solid var(--teal);";
+          } else {
+            intBadge.textContent = "✕ INTEGRITY BROKEN";
+            intBadge.style.cssText =
+              "margin-left:auto;font-size:11px;padding:3px 10px;border-radius:3px;font-weight:700;letter-spacing:.05em;" +
+              "background:rgba(255,77,77,0.12);color:#ff4d4d;border:1px solid #ff4d4d;";
+            if (vdata.violations && vdata.violations.length > 0) {
+              const v = `<div style="margin-top:16px;padding:12px 14px;border:1px solid var(--red);border-radius:4px;background:var(--red-lo);">
+                <div style="font-size:11px;font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">⚠ ${vdata.violations.length} Violation${vdata.violations.length > 1 ? "s" : ""} Detected</div>
+                ${vdata.violations.map((x) => `<div style="font-size:11px;font-family:var(--mono);color:var(--text);padding:4px 0;border-top:1px solid var(--border);">${x}</div>`).join("")}
+              </div>`;
+              document
+                .getElementById("custodyTimeline")
+                .insertAdjacentHTML("afterend", v);
+            }
+          }
+        } catch (err) {
+          intBadge.textContent = "? UNVERIFIED";
+          intBadge.style.cssText =
+            "margin-left:auto;font-size:11px;padding:3px 10px;border-radius:3px;font-weight:700;letter-spacing:.05em;" +
+            "background:var(--yellow-lo);color:var(--yellow);border:1px solid var(--yellow);";
+          console.warn(
+            "[WipeTrace] /verify endpoint unreachable:",
+            err.message,
+          );
+        }
+      }
+
+      // ─────────────────────────────────────────
+      // FIX 3: THEME TOGGLE
+      // ─────────────────────────────────────────
+      function toggleTheme() {
+        const isDark =
+          document.documentElement.getAttribute("data-theme") !== "light";
+        document.documentElement.setAttribute(
+          "data-theme",
+          isDark ? "light" : "dark",
+        );
+        document.getElementById("themeIcon").textContent = isDark ? "🌙" : "☀";
+        localStorage.setItem("wt-theme", isDark ? "light" : "dark");
+        // Re-render charts so their hardcoded colors update to match new theme
+        if (scanData) {
+          if (pieChartInst) {
+            pieChartInst.destroy();
+            pieChartInst = null;
+          }
+          if (entropyChartInst) {
+            entropyChartInst.destroy();
+            entropyChartInst = null;
+          }
+          renderPie();
+          renderEntropyChart();
+        }
+      }
+      // Restore saved theme
+      (function () {
+        const saved = localStorage.getItem("wt-theme");
+        if (saved) {
+          document.documentElement.setAttribute("data-theme", saved);
+          const icon = document.getElementById("themeIcon");
+          if (icon) icon.textContent = saved === "light" ? "🌙" : "☀";
+        }
+      })();
+
+      // ─────────────────────────────────────────
+      // FIX 8: EXPORT MENU + ALL FORMATS
+      // ─────────────────────────────────────────
+      function showExportMenu(e) {
+        e.stopPropagation();
+        const menu = document.getElementById("exportMenu");
+        menu.style.display = menu.style.display === "none" ? "block" : "none";
+      }
+      document.addEventListener("click", () => {
+        const m = document.getElementById("exportMenu");
+        if (m) m.style.display = "none";
+      });
+
+      function exportJSON() {
+        if (!_rawApiJson) return;
+        const blob = new Blob([JSON.stringify(_rawApiJson, null, 2)], {
+          type: "application/json",
+        });
+        _dl(blob, `wipetrace_${SESSION_ID || "report"}.json`);
+      }
+
+      function exportCSV() {
+        if (!scanData) return;
+        const headers = [
+          "Region ID",
+          "Start Offset",
+          "End Offset",
+          "Size (bytes)",
+          "Wipe Type",
+          "Avg Entropy",
+          "Confidence",
+          "Block Count",
+        ];
+        const rows = scanData.regions.map((r) =>
+          [
+            r.id,
+            r.start,
+            r.end,
+            r.size,
+            r.type,
+            r.entropy,
+            r.confidence,
+            r.blockCount,
+          ].join(","),
+        );
+        const blob = new Blob([[headers.join(","), ...rows].join("\n")], {
+          type: "text/csv",
+        });
+        _dl(blob, `wipetrace_regions_${SESSION_ID || "report"}.csv`);
+      }
+
+      function exportPDF() {
+        if (!scanData || !_rawApiJson) return;
+        const d = _rawApiJson;
+        const st = d.stats || {};
+        const rpt = d.forensic_report || {};
+        const coc = d.chain_of_custody || {};
+        const now = new Date().toLocaleString();
+        const html = `<!DOCTYPE html><html><head><meta charset="utf-8">
+<title>WipeTrace Forensic Report</title>
+<style>
+  body{font-family:Arial,sans-serif;font-size:12px;color:#111;margin:40px;line-height:1.6}
+  h1{font-size:20px;border-bottom:2px solid #111;padding-bottom:8px;margin-bottom:16px}
+  h2{font-size:14px;margin:24px 0 8px;border-bottom:1px solid #ccc;padding-bottom:4px}
+  .badge{display:inline-block;padding:2px 8px;border-radius:3px;font-weight:700;font-size:11px}
+  .HIGH{background:#fdd;color:#900} .MEDIUM{background:#ffe;color:#760}
+  .LOW{background:#def;color:#047} .NEGLIGIBLE{background:#eee;color:#555}
+  table{width:100%;border-collapse:collapse;margin-top:8px;font-size:11px}
+  th{background:#f0f0f0;padding:6px 8px;text-align:left;border:1px solid #ddd}
+  td{padding:5px 8px;border:1px solid #ddd}
+  tr:nth-child(even){background:#f9f9f9}
+  .meta{color:#555;font-size:11px;margin-bottom:4px}
+  .hash{font-family:monospace;font-size:10px;word-break:break-all;background:#f5f5f5;padding:4px 6px;border-radius:2px}
+  .action{margin:8px 0;padding:8px 10px;border-left:3px solid #999;background:#fafafa}
+  .action.IMMEDIATE,.action.HIGH{border-color:#c00} .action.MEDIUM{border-color:#c90} .action.LOW{border-color:#069}
+  @media print{body{margin:20px}}
+</style></head><body>
+<h1>WipeTrace — Forensic Analysis Report</h1>
+<p class="meta">Generated: ${now} &nbsp;|&nbsp; Session: ${d.session_id || "—"} &nbsp;|&nbsp; File: ${d.filename || "—"}</p>
+<p class="meta">SHA-256: <span class="hash">${d.sha256 || "—"}</span></p>
+<p class="meta">Examiner: ${CASE_DETAILS.examiner || coc.examiner || "WipeTrace Analysis System"}</p>
+${CASE_DETAILS.case_id ? `<p class="meta">Case ID: ${CASE_DETAILS.case_id}</p>` : ""}
+${CASE_DETAILS.agency ? `<p class="meta">Agency: ${CASE_DETAILS.agency}</p>` : ""}
+${CASE_DETAILS.device ? `<p class="meta">Device: ${CASE_DETAILS.device}</p>` : ""}
+${CASE_DETAILS.notes ? `<p class="meta">Notes: ${CASE_DETAILS.notes}</p>` : ""}
+
+<h2>Verdict &amp; Intent Score</h2>
+<p><span class="badge ${st.verdict || "NEGLIGIBLE"}">${st.verdict || "NEGLIGIBLE"}</span> &nbsp; Intent Score: <strong>${st.intent_score || 0}/100</strong></p>
+<p>${rpt.executive_summary || ""}</p>
+
+<h2>Key Statistics</h2>
+<table><tr><th>Metric</th><th>Value</th></tr>
+<tr><td>Total Blocks</td><td>${(st.total_blocks || 0).toLocaleString()}</td></tr>
+<tr><td>Suspicious Blocks</td><td>${(st.suspicious_blocks || 0).toLocaleString()}</td></tr>
+<tr><td>Regions Detected</td><td>${st.regions_count || 0}</td></tr>
+<tr><td>Disk Coverage</td><td>${(st.coverage_pct || 0).toFixed(1)}%</td></tr>
+<tr><td>Dominant Wipe Type</td><td>${(st.dominant_type || "NORMAL").replace(/_/g, " ")}</td></tr>
+<tr><td>Avg Entropy (flagged)</td><td>${(st.avg_entropy_flagged || 0).toFixed(3)}</td></tr>
+</table>
+
+<h2>Wipe Regions (${scanData.regions.length})</h2>
+<table><tr><th>#</th><th>Start</th><th>End</th><th>Size</th><th>Type</th><th>Entropy</th><th>Confidence</th></tr>
+${scanData.regions.map((r) => `<tr><td>${r.id}</td><td>0x${r.start.toString(16).toUpperCase()}</td><td>0x${r.end.toString(16).toUpperCase()}</td><td>${formatBytes(r.size)}</td><td>${r.type.replace(/_/g, " ")}</td><td>${r.entropy.toFixed(3)}</td><td>${Math.round(r.confidence * 100)}%</td></tr>`).join("")}
+</table>
+
+<h2>Recommended Actions</h2>
+${(rpt.recommended_actions || []).map((a) => `<div class="action ${a.priority}"><strong>[${a.priority}] ${a.action}</strong><br>${a.detail}</div>`).join("")}
+
+<h2>Chain of Custody</h2>
+<p class="meta">Final audit hash: <span class="hash">${coc.final_hash || "—"}</span></p>
+${(coc.events || []).map((e) => `<p style="margin:4px 0;font-size:11px;"><strong>#${e.seq} ${(e.type || "").replace(/_/g, " ")}</strong> — ${new Date(e.ts).toLocaleString()}<br><span style="color:#555">${e.desc || ""}</span></p>`).join("")}
+
+<p style="margin-top:40px;font-size:10px;color:#999;border-top:1px solid #ddd;padding-top:8px;">
+WipeTrace Forensic Analysis System · Report generated ${now} · This report is confidential evidence material.
+</p>
+</body></html>`;
+        const w = window.open("", "_blank");
+        w.document.write(html);
+        w.document.close();
+        setTimeout(() => w.print(), 600);
+      }
+
+      function exportDOCX() {
+        if (!scanData || !_rawApiJson) return;
+        // Build RTF (opens in Word, LibreOffice, and most DOCX-capable apps)
+        const d = _rawApiJson;
+        const st = d.stats || {};
+        const rpt = d.forensic_report || {};
+        const coc = d.chain_of_custody || {};
+        const now = new Date().toLocaleString();
+        const esc = (s) =>
+          (s || "").replace(/\\/g, "\\\\").replace(/[{}]/g, "\\$&");
+
+        let rtf = `{\\rtf1\\ansi\\deff0
+{\\fonttbl{\\f0 Arial;}{\\f1 Courier New;}}
+{\\colortbl;\\red17\\green17\\blue17;\\red100\\green100\\blue100;\\red0\\green100\\blue80;}
+\\paperw12240\\paperh15840\\margl1440\\margr1440\\margt1440\\margb1440
+\\f0\\fs24\\b WipeTrace — Forensic Analysis Report\\b0\\par
+\\f0\\fs20\\cf2 Generated: ${esc(now)} | Session: ${esc(d.session_id || "—")} | File: ${esc(d.filename || "—")}\\cf1\\par
+\\f0\\fs20 SHA-256: \\f1\\fs18 ${esc(d.sha256 || "—")}\\f0\\fs20\\par
+Examiner: ${esc(coc.examiner || "WipeTrace Analysis System")}\\par\\par
+\\b\\fs22 Verdict \\& Intent Score\\b0\\fs20\\par
+Verdict: \\b ${esc(st.verdict || "NEGLIGIBLE")}\\b0  |  Intent Score: \\b ${st.intent_score || 0}/100\\b0\\par
+${esc(rpt.executive_summary || "")}\\par\\par
+\\b\\fs22 Key Statistics\\b0\\fs20\\par
+Total Blocks: ${(st.total_blocks || 0).toLocaleString()}\\par
+Suspicious Blocks: ${(st.suspicious_blocks || 0).toLocaleString()}\\par
+Regions Detected: ${st.regions_count || 0}\\par
+Disk Coverage: ${(st.coverage_pct || 0).toFixed(1)}%\\par
+Dominant Wipe Type: ${esc((st.dominant_type || "NORMAL").replace(/_/g, " "))}\\par\\par
+\\b\\fs22 Wipe Regions (${scanData.regions.length})\\b0\\fs20\\par
+`;
+        scanData.regions.forEach((r) => {
+          rtf += `#${r.id}  0x${r.start.toString(16).toUpperCase().padStart(8, "0")} → 0x${r.end.toString(16).toUpperCase().padStart(8, "0")}  ${formatBytes(r.size)}  ${esc(r.type.replace(/_/g, " "))}  H:${r.entropy.toFixed(3)}  Conf:${Math.round(r.confidence * 100)}%\\par\n`;
+        });
+        rtf += `\\par\\b\\fs22 Recommended Actions\\b0\\fs20\\par\n`;
+        (rpt.recommended_actions || []).forEach((a) => {
+          rtf += `\\b [${esc(a.priority)}] ${esc(a.action)}\\b0\\par ${esc(a.detail)}\\par\\par\n`;
+        });
+        rtf += `\\par\\b\\fs22 Chain of Custody\\b0\\fs20\\par
+Final audit hash: \\f1\\fs18 ${esc(coc.final_hash || "—")}\\f0\\fs20\\par\n`;
+        (coc.events || []).forEach((e) => {
+          rtf += `\\b #${e.seq} ${esc((e.type || "").replace(/_/g, " "))}\\b0 — ${esc(new Date(e.ts).toLocaleString())}\\par ${esc(e.desc || "")}\\par\n`;
+        });
+        rtf += `}`;
+
+        const blob = new Blob([rtf], { type: "application/rtf" });
+        _dl(blob, `wipetrace_${SESSION_ID || "report"}.rtf`);
+      }
+
+      function _dl(blob, filename) {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = filename;
+        a.click();
+        URL.revokeObjectURL(url);
+        document.getElementById("exportMenu").style.display = "none";
+      }
+
+      // ─────────────────────────────────────────
+      // FIX 7: PRIORITY COLOUR in recommended actions
+      // ─────────────────────────────────────────
+      // (actColors in renderForensicReport updated below)
     </script>
+    <!-- Disk map hover tooltip -->
+    <div class="disk-map-tooltip" id="diskMapTooltip">
+      <div class="dmt-type" id="dmtType"></div>
+      <div class="dmt-row">
+        Offset <span id="dmtStart"></span> → <span id="dmtEnd"></span>
+      </div>
+      <div class="dmt-row">Size <span id="dmtSize"></span></div>
+      <div class="dmt-row">Entropy <span id="dmtEntropy"></span></div>
+      <div class="dmt-row">Confidence <span id="dmtConf"></span></div>
+      <div class="dmt-row">Blocks <span id="dmtBlocks"></span></div>
+    </div>
   </body>
 </html>
