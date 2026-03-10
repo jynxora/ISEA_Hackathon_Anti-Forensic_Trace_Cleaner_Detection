@@ -492,7 +492,3 @@ To report a false positive or false negative with a specific image type, open an
 - The hex dump of a representative block (first 64 bytes sufficient)
 
 ---
-
-## Licence
-
-This project is released under the MIT Licence. See `LICENSE` for details.
