@@ -162,19 +162,6 @@ uvicorn backend_integrate:app --host 0.0.0.0 --port 8000
 upload_module.html 
 ```
 Upload your image files and scan the contents on the Analysis Dashboard
----
-
-## Running the Server
-
-```bash
-uvicorn backend_integrate:app --host 0.0.0.0 --port 8000
-```
-
-Then open **`upload_module.html`** in your browser (you can open it as a local file — no web server needed for the frontend).
-
-> **CORS:** The server is configured with `allow_origins=["*"]` for development. Tighten this to your specific origin in production by editing the `CORSMiddleware` block in `backend_integrate.py`.
-
----
 
 ## Usage Walkthrough
 
