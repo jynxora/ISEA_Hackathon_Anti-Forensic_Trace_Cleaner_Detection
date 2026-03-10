@@ -145,23 +145,23 @@ wipetrace/
 # 1. Clone the repository
 git clone https://github.com/jynxora/wipetrace.git
 cd wipetrace
-
-# 2. Create and activate a virtual environment
-python3 -m venv .venv
-source .venv/bin/activate        # Windows: .venv\Scripts\activate
-
-# 3. Install dependencies
-pip install -r requirements.txt
-
-# 4. Create the engine package directory (if it doesn't exist)
-mkdir -p engine
-mv classifier.py ml_classifier.py aggregator.py partition_map.py \
-   scorer.py report_generator.py custody.py reader.py writer.py engine/
-
-# 5. Verify
-python3 -c "from engine.classifier import classify_block; print('OK')"
 ```
 
+```bash
+# 2. Install dependencies
+pip install -r requirements.txt
+```
+
+```bash
+# 3. Run the server
+uvicorn backend_integrate:app --host 0.0.0.0 --port 8000
+```
+
+```bash
+# 4. Run the Upload Page on Browser
+upload_module.html 
+```
+Upload your image files and scan the contents on the Analysis Dashboard
 ---
 
 ## Running the Server
