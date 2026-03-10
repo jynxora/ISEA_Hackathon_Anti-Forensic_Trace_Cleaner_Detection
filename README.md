@@ -127,7 +127,7 @@ wipetrace/
 └── README.md
 ```
 
-> **Note on module paths:** `engine/` modules are imported as `from engine.classifier import ...`. Place all `engine/*.py` files in an `engine/` subdirectory alongside `backend_integrate.py`. The `engine/` directory does not need an `__init__.py` (Python 3.3+ namespace packages), but adding an empty one is fine.
+> **Note on module paths:** `engine/` modules are imported as `from engine.classifier import ...`. Place all `engine/*.py` files in an `engine/` subdirectory. The `engine/` directory does not need an `__init__.py` (Python 3.3+ namespace packages), but adding an empty one is fine.
 
 ---
 
