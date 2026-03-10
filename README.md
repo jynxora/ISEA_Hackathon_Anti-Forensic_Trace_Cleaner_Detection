@@ -106,8 +106,8 @@ wipetrace/
 ├── scanner_v2.py               Scan orchestrator (parallel + ML + custody)
 ├── scanner.py                  Legacy single-threaded scanner (deprecated)
 ├── hashing.py                  SHA-256 file hashing (1 MB streaming chunks)
-├── upload_module.html      Case intake form + file upload UI */front end/*
-├── analysis_dashboard.html Full analysis dashboard (SPA) */front end/*
+├── upload_module.html          Case intake form + file upload UI */front end/*
+├── analysis_dashboard.html     Full analysis dashboard (SPA) */front end/*
 ├── engine/
 │   ├── reader.py               BlockReader — streams image in 512-byte blocks
 │   ├── classifier.py           Rule-based block classifier (7 wipe types)
