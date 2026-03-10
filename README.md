@@ -143,7 +143,7 @@ wipetrace/
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/your-org/wipetrace.git
+git clone https://github.com/jynxora/wipetrace.git
 cd wipetrace
 
 # 2. Create and activate a virtual environment
@@ -167,17 +167,10 @@ python3 -c "from engine.classifier import classify_block; print('OK')"
 ## Running the Server
 
 ```bash
-uvicorn backend_integrate:app --host 0.0.0.0 --port 8000 --reload
+uvicorn backend_integrate:app --host 0.0.0.0 --port 8000
 ```
 
 Then open **`upload_module.html`** in your browser (you can open it as a local file — no web server needed for the frontend).
-
-For production deployments, remove `--reload` and consider running behind a reverse proxy (nginx, Caddy) with TLS.
-
-```bash
-# Production
-uvicorn backend_integrate:app --host 127.0.0.1 --port 8000 --workers 2
-```
 
 > **CORS:** The server is configured with `allow_origins=["*"]` for development. Tighten this to your specific origin in production by editing the `CORSMiddleware` block in `backend_integrate.py`.
 
