@@ -73,6 +73,9 @@ SUSPECT_DOMINANT_MAX   = 0.85   # if >85% one byte -> unallocated, not pattern w
 MULTI_PASS_LO          = 3.5
 MULTI_PASS_HI          = 6.5
 MULTI_PASS_UNIF_MAX    = 0.0080  # anomalously flat for this entropy range
+MULTI_PASS_FILL_MIN    = 0.35    # at least 35% of bytes must be 0x00 or 0xFF;
+                                  # blocks below this are encrypted/compressed data,
+                                  # not wipe-pattern transition blocks.
 
 # Known compressed/encrypted format magic bytes
 # Presence in a block's first 16 bytes = strong legit-data signal
@@ -374,13 +377,22 @@ def classify_block(block_id: int, offset: int, data: bytes) -> BlockResult:
     # ── 7. MULTI-PASS CANDIDATE ───────────────────────────────────────────────
     # Mid-range entropy + anomalously flat distribution.
     # Single block cannot confirm multi-pass — aggregator.py does band analysis.
-    # Legit guard: executables and DB pages have clustered distributions;
-    # multi-pass patterns are anomalously uniform for this entropy range.
+    #
+    # CRITICAL GATE: a block is only a MULTI_PASS candidate if at least
+    # MULTI_PASS_FILL_MIN of its bytes are 0x00 or 0xFF.  Real multi-pass
+    # tools write entire passes of a single fill value — their transition
+    # blocks will still carry a meaningful ratio of the fill byte.  A block
+    # with high entropy and <35% fill bytes is almost certainly encrypted or
+    # compressed data, not a wipe pattern.  Without this gate the classifier
+    # fires on any mid-entropy random-looking data that happens to have a
+    # flat byte distribution.
     if MULTI_PASS_LO <= entropy <= MULTI_PASS_HI:
-        uniformity = distribution_uniformity(freq)
-        if uniformity < MULTI_PASS_UNIF_MAX:
-            return _result(block_id, offset, "MULTI_PASS", entropy, 0.52,
-                           dominant_byte, dominant_pct, True, zero_ratio, ff_ratio)
+        fill_ratio = zero_ratio + ff_ratio   # fraction of bytes that are 0x00 or 0xFF
+        if fill_ratio >= MULTI_PASS_FILL_MIN:
+            uniformity = distribution_uniformity(freq)
+            if uniformity < MULTI_PASS_UNIF_MAX:
+                return _result(block_id, offset, "MULTI_PASS", entropy, 0.52,
+                               dominant_byte, dominant_pct, True, zero_ratio, ff_ratio)
 
     # ── 8. GENUINE UNALLOCATED ────────────────────────────────────────────────
     # Zero-dominant (70-90%) but not clean enough for ZERO_WIPE.
