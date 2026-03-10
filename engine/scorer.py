@@ -45,12 +45,14 @@ class ScanStats:
     total_blocks:        int
     suspicious_blocks:   int
     suspicious_pct:      float
-    wipe_density:        float   # suspicious / total (from team's model)
+    wipe_density:        float
     regions_count:       int
     avg_entropy_flagged: float
-    intent_score:        int     # 0-100
-    verdict:             str     # HIGH | MEDIUM | LOW | NEGLIGIBLE
+    intent_score:        int
+    verdict:             str
     wipe_type_counts:    dict
+    coverage_pct:        float = 0.0
+    dominant_type:       str   = "NONE"
 
     def to_dict(self) -> dict:
         return {
@@ -63,15 +65,24 @@ class ScanStats:
             "intent_score":        self.intent_score,
             "verdict":             self.verdict,
             "wipe_type_counts":    self.wipe_type_counts,
+            "coverage_pct":        round(self.coverage_pct, 1),
+            "dominant_type":       self.dominant_type,
         }
 
 
 def compute_score(
-    blocks:  List[BlockResult],
-    regions: List[Region],
+    blocks:        List[BlockResult],
+    regions:       List[Region],
+    partition_map = None,
 ) -> ScanStats:
     """
     Compute forensic intent score from block-level and region-level evidence.
+
+    When partition_map is provided, regions beyond every partition boundary
+    are excluded from the coverage and region-count scores — they represent
+    unwritten sectors, not deliberate wipes.  RANDOM_WIPE and MULTI_PASS
+    beyond the boundary still contribute partially because those patterns
+    cannot appear naturally in unwritten space.
     """
     total = len(blocks)
     if total == 0:
@@ -101,13 +112,53 @@ def compute_score(
         if b.wipe_type in type_counts:
             type_counts[b.wipe_type] += 1
 
+    # ── Partition-boundary filtering ──────────────────────────────────────────
+    # Split regions into "meaningful" (inside partition or pattern-based) and
+    # "likely-unwritten" (beyond boundary, fill-type only).
+    # This prevents a half-empty disk from inflating the intent score with
+    # thousands of unwritten zero-fill blocks.
+    if partition_map is not None and partition_map.scheme != "UNKNOWN":
+        # Regions that should contribute fully to the score
+        scoring_regions = []
+        # Regions that are beyond the boundary AND are simple fill types
+        beyond_fill_regions = []
+        for r in regions:
+            is_beyond = r.boundary_context == "BEYOND_BOUNDARY"
+            is_simple_fill = r.wipe_type in ("ZERO_WIPE", "FF_WIPE",
+                                              "LIKELY_ZERO_WIPE", "LIKELY_FF_WIPE")
+            if is_beyond and is_simple_fill:
+                beyond_fill_regions.append(r)
+            else:
+                scoring_regions.append(r)
+
+        # Recompute suspicious_pct and wipe_density excluding beyond-fill blocks
+        beyond_fill_block_ids = set()
+        for r in beyond_fill_regions:
+            beyond_fill_block_ids.update(r.blocks)
+        adjusted_susp = n_susp - sum(
+            1 for b in suspicious
+            if b.block_id in beyond_fill_block_ids
+        )
+        adjusted_pct     = (adjusted_susp / total) * 100 if total > 0 else 0.0
+        adjusted_density = adjusted_susp / total if total > 0 else 0.0
+
+        n_beyond_fill    = len(beyond_fill_regions)
+        effective_regions = scoring_regions
+    else:
+        adjusted_pct     = susp_pct
+        adjusted_density = wipe_density
+        effective_regions = regions
+        n_beyond_fill    = 0
+
     # ── Stage 1: density fast-path verdict floor ──────────────────────────────
-    # Directly from team's analysis_engine.py intent model
-    if wipe_density > 0.30:
+    # Use adjusted density when partition map is available so unwritten sectors
+    # don't artificially inflate the verdict to HIGH.
+    density_for_verdict = adjusted_density if partition_map is not None else wipe_density
+    if density_for_verdict > 0.30:
         density_verdict = "HIGH"
-    elif wipe_density > 0.10:
+    elif density_for_verdict > 0.10:
         density_verdict = "MEDIUM"
-    elif wipe_density > 0.02:
+    elif density_for_verdict > 0.02:
         density_verdict = "LOW"
     elif n_susp >= 2:
         density_verdict = "LOW"
@@ -116,20 +167,18 @@ def compute_score(
 
     # ── Stage 2: evidence quality score (0-100 pts) ───────────────────────────
 
-    # Coverage (0-40 pts): scales 0% -> 0 pts, 10%+ -> 40 pts
-    coverage_score = min(susp_pct / 10.0, 1.0) * 40
+    # Coverage (0-40 pts): use adjusted % — excludes beyond-boundary fill blocks
+    coverage_score = min(adjusted_pct / 10.0, 1.0) * 40
 
-    # Region count (0-20 pts): more distinct regions = more deliberate targeting
-    # Targeted wiping (few high-confidence regions) scores differently than
-    # mass wiping (many regions) — both are weighted here
-    region_score = min(len(regions) / 10.0, 1.0) * 20
+    # Region count (0-20 pts): use effective_regions (excludes beyond-fill)
+    region_score = min(len(effective_regions) / 10.0, 1.0) * 20
 
-    # RANDOM_WIPE (0-25 pts): strongest wipe tool indicator
-    # Pseudorandom overwrites cannot appear naturally
+    # RANDOM_WIPE (0-25 pts): strongest wipe tool indicator — all regions count
+    # (random patterns can't appear naturally even beyond partition boundary)
     rand_regions = [r for r in regions if r.wipe_type == "RANDOM_WIPE"]
     rand_score   = min(len(rand_regions) / 3.0, 1.0) * 25
 
-    # MULTI_PASS (0-15 pts): confirms deliberate tool (shred, Gutmann, DoD)
+    # MULTI_PASS (0-15 pts): confirms deliberate tool
     multi_regions = [r for r in regions if r.wipe_type == "MULTI_PASS"]
     multi_score   = min(len(multi_regions) / 2.0, 1.0) * 15
 
@@ -141,13 +190,24 @@ def compute_score(
     strong_count  = sum(type_counts.get(t, 0) for t in STRONG_WIPE_TYPES)
     partial_count = sum(type_counts.get(t, 0) for t in PARTIAL_WIPE_TYPES)
     if n_susp > 0 and partial_count > strong_count and strong_count < 10:
-        raw_score -= 10  # mostly partial evidence, not enough hard confirmation
+        raw_score -= 10
 
     # Penalty 2: low average region confidence
     if regions:
         avg_conf = sum(r.confidence for r in regions) / len(regions)
         if avg_conf < 0.55:
             raw_score -= 5
+
+    # Penalty 3: if the majority of detected "wipe" regions are beyond the
+    # partition boundary and are simple fill types, reduce score further.
+    # This handles the case of a mostly-empty disk where unwritten zero sectors
+    # dominate the evidence.
+    if partition_map is not None and regions:
+        beyond_ratio = n_beyond_fill / len(regions)
+        if beyond_ratio > 0.6:
+            raw_score -= 15   # most "evidence" is unwritten space, not wipes
+        elif beyond_ratio > 0.3:
+            raw_score -= 7
 
     intent_score = min(max(int(round(raw_score)), 0), 100)
 
@@ -161,12 +221,26 @@ def compute_score(
     else:
         score_verdict = "NEGLIGIBLE"
 
-    # Density fast-path can raise the verdict but not lower it
     verdict_order = ["NEGLIGIBLE", "LOW", "MEDIUM", "HIGH"]
     final_verdict = verdict_order[
         max(verdict_order.index(score_verdict),
             verdict_order.index(density_verdict))
     ]
+
+    # ── Build ScanStats ───────────────────────────────────────────────────────
+    # coverage_pct and dominant_type were added in session 2
+    if regions:
+        total_suspicious_blocks = sum(r.block_count for r in regions)
+        coverage_pct = round((total_suspicious_blocks / total) * 100, 1) if total > 0 else 0.0
+        type_block_counts = {}
+        for r in regions:
+            type_block_counts[r.wipe_type] = (
+                type_block_counts.get(r.wipe_type, 0) + r.block_count
+            )
+        dominant_type = max(type_block_counts, key=type_block_counts.get) if type_block_counts else "NONE"
+    else:
+        coverage_pct   = 0.0
+        dominant_type  = "NONE"
 
     return ScanStats(
         total_blocks        = total,
@@ -178,6 +252,8 @@ def compute_score(
         intent_score        = intent_score,
         verdict             = final_verdict,
         wipe_type_counts    = type_counts,
+        coverage_pct        = coverage_pct,
+        dominant_type       = dominant_type,
     )
 
 
@@ -191,4 +267,5 @@ def _empty_stats() -> ScanStats:
             "MULTI_PASS": 0, "LIKELY_ZERO_WIPE": 0,
             "LIKELY_FF_WIPE": 0, "LOW_ENTROPY_SUSPECT": 0,
         },
+        coverage_pct=0.0, dominant_type="NONE",
     )
