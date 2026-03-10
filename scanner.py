@@ -1,6 +1,14 @@
 """
 scanner.py
 ──────────
+⚠  DEPRECATED — superseded by scanner_v2.py (used by the FastAPI backend).
+   This file is no longer called by the backend. It is kept for reference only.
+
+   The FallbackRegion dataclass and _fallback_aggregate() function below are
+   dead code: the aggregator self-corroboration fix (SELF_CORROBORATE_BLOCKS)
+   in engine/aggregator.py resolves the 0-region bug that originally motivated
+   the fallback. They should not be ported to scanner_v2.py.
+
 Top-level orchestrator. Wires together:
 
     reader.py      → stream blocks from disk image
@@ -9,9 +17,7 @@ Top-level orchestrator. Wires together:
     scorer.py      → compute intent score + stats
     writer.py      → write analysis_<SID>.json
 
-This is the single function FastAPI calls after a successful upload.
-
-Usage:
+Usage (legacy):
     from scanner import run_scan
 
     json_path = run_scan(
@@ -33,7 +39,8 @@ from engine.scorer     import compute_score
 from engine.writer     import write_results
 
 
-# ── Fallback region dataclass (mirrors whatever aggregator.py produces) ────────
+# ── DEAD CODE — see module docstring. Superseded by scanner_v2.py. ──────────────
+# FallbackRegion and _fallback_aggregate() are no longer called by any active path.
 @dataclass
 class FallbackRegion:
     """
@@ -69,6 +76,9 @@ class FallbackRegion:
 
 def _fallback_aggregate(block_results: list[BlockResult]) -> list:
     """
+    DEAD CODE — see module docstring. The aggregator self-corroboration fix
+    makes this path unreachable. Do not port to scanner_v2.py.
+
     Pure-Python fallback region builder.
 
     Groups consecutive suspicious blocks into contiguous regions.
